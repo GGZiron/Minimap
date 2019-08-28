@@ -3,7 +3,6 @@
 module Minimap
 
 =begin
-
   Script Name: Minimap
   Author: GGZiron
   Engine: RPG Maker VX Ace
@@ -323,7 +322,6 @@ module Minimap
   Minimap::enabled = true 
   Minimap::enabled = false
   The first one enables it, the second one dissables it.
-
   If you need to redraw minimap entirely, because it happens something that
   my minimap didn't react on, you can use this script call:
   
@@ -377,7 +375,7 @@ module Minimap
     
     def enabled=(bool)
       @enabled = bool
-      draw_map if bool && @full_map && $game_map && $game_player unless UPDATE_WHEN_DISSABLED
+      draw_map if bool && @full_map && map && $game_player unless UPDATE_WHEN_DISSABLED
     end  
     
     def set_refresh_flag
@@ -411,13 +409,13 @@ module Minimap
     end
         
     def width
-      return WIDTH  if $game_map.loop_horizontal?
-      WIDTH < $game_map.width ? WIDTH : $game_map.width
+      return WIDTH  if map.loop_horizontal?
+      WIDTH < $game_map.width ? WIDTH : map.width
     end 
   
     def height
-      return HEIGHT  if $game_map.loop_vertical?
-      HEIGHT < $game_map.height ? HEIGHT : $game_map.height
+      return HEIGHT  if map.loop_vertical?
+      HEIGHT < map.height ? HEIGHT : map.height
     end 
     
     def passable_color;     COLORS[1] end  
@@ -434,12 +432,11 @@ module Minimap
       
 # Check value ===========================================================
     def vehicles?(x, y)
-      map = $game_map
-      $game_map.boat.pos_nt?(x, y) || $game_map.ship.pos_nt?(x, y) || $game_map.airship.pos_nt?(x, y)
+      map.boat.pos_nt?(x, y) || map.ship.pos_nt?(x, y) || map.airship.pos_nt?(x, y)
     end
   
     def events?(x, y)
-      $game_map.events_xy(x, y).any? do |event|
+      map.events_xy(x, y).any? do |event|
         event.normal_priority? || self.is_a?(Game_Event)
       end
     end
@@ -452,7 +449,7 @@ module Minimap
       draw_map
     end
     
-    def draw_map(ini_x = 0, ini_y = 0, fin_x = $game_map.width, fin_y = $game_map.height)
+    def draw_map(ini_x = 0, ini_y = 0, fin_x = map.width, fin_y = map.height)
       clear_update_data
       @player_x = $game_player.x
       @player_y = $game_player.y
@@ -546,21 +543,6 @@ module Minimap
       walking_passage(x, y) 
     end  
     
-    def get_event_color(event)
-      return unless event.is_a?(Game_Event)
-      return unless event.list
-      ini = COMMENT_SCANER_INI - 1
-      fin = COMMENT_SCANER_FIN
-      for i in ini...fin do
-        next unless event.list[i]
-        if event.list[i].code == 108
-          return event_color if event.list[i].parameters[0]=~/<minimap normal color>/
-          return COLORS[$1.to_i] if event.list[i].parameters[0]=~/<minimap color (\d+)>/
-        end
-      end
-      return nil
-    end
-    
     def set_unpasable_2(x, y)
       height = (TILE_SIZE/3).ceil
       rect = Rect.new(x * TILE_SIZE, (y + 1)* TILE_SIZE - height, TILE_SIZE, height)
@@ -614,7 +596,23 @@ module Minimap
       end
       passable_color 
     end  
-
+    
+# Get Event Color (called only externally) ================================  
+    def get_event_color(event)#the comment tag reader
+      return unless event.is_a?(Game_Event)
+      return unless event.list
+      ini = COMMENT_SCANER_INI - 1
+      fin = COMMENT_SCANER_FIN
+      for i in ini...fin do
+        next unless event.list[i]
+        if event.list[i].code == 108
+          return event_color if event.list[i].parameters[0]=~/<minimap normal color>/
+          return COLORS[$1.to_i] if event.list[i].parameters[0]=~/<minimap color (\d+)>/
+        end
+      end
+      return nil
+    end
+    
 # Abjust Minimap (called only externally) =================================
     
     def abjust_minimap(plane) #parameter must be Plane object
@@ -626,7 +624,7 @@ module Minimap
       y = abjust_y(y, h) unless $game_map.loop_vertical?
       plane.ox = x * TILE_SIZE; plane.oy = y * TILE_SIZE
     end  
-    
+
 # Method with uncategorized functionality ==================================
 
     def abjust_x(x, w)
