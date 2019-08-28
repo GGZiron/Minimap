@@ -54,7 +54,7 @@ module Minimap
   for that you got to see the Version History.
   
   Version History:
-   Version 1.0.0 Realeased on:
+   Version 1.0.0 Realeased on: 28/08/2019
    That is the initial version. 
   
   Made this script with the idea to be as compitable as possible. Also made
