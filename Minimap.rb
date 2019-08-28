@@ -20,7 +20,7 @@ module Minimap
   Terms are subject of change. The valid terms for you are the ones active
   during your project release. Need this so I add one or another type
   of license, if I see the need for it.
-  I very much doubt to make drastic changes on them, if any. but still be 
+  I very much doubt to make drastic changes on them, if any, but still be 
   adviced to check them during release of your project.
   Version: 1.0.0
   
