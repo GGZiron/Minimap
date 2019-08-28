@@ -7,11 +7,11 @@ module Minimap
   Script Name: Minimap
   Author: GGZiron
   Engine: RPG Maker VX Ace
-  Terms: Free for non comercial projects. Sending me a copy of your game 
-  would be apreciated, but is not mandatory.
-  For comercial projects, I request free copy or activation code 
+  Terms: Free for non commercial projects. Sending me a copy of your game 
+  would be appreciated, but is not mandatory.
+  For commercial projects, I request free copy or activation code 
   for the game. 
-  Must be credited as GGZiron in both comercial and uncomercial projects.
+  Must be credited as GGZiron in both commercial and non commercial projects.
   Not allowed to repost, only allowed to post link to this script tread in
   RPG maker forum.
   Allowed to edit, and allowed to post your edit, but together with link to this
@@ -20,8 +20,8 @@ module Minimap
   Terms are subject of change. The valid terms for you are the ones active
   during your project release. Need this so I add one or another type
   of license, if I see the need for it.
-  I very much doubt to make drastic changes on them, if any, but still be 
-  adviced to check them during release of your project.
+  I very much doubt to make drastic changes on them, if any. but still be 
+  advised to check them during release of your project.
   Version: 1.0.0
   
   Script Purpose: Adds Minimap on the Scene Map, to be used for navigation.
@@ -34,7 +34,7 @@ module Minimap
   love to dash in debug through during playtest.
   
   Warning!! As that is my initial version, you might want me to patch it a 
-  little before including that into your project. Currently, recomended only
+  little before including that into your project. Currently, recommended only
   for preview purpose. Still, you can include it in your project, if you see
   no issues. Just be sure to check for updates :).
   
@@ -93,12 +93,12 @@ module Minimap
   ocne is visible.
   
   Features:
-    *Kinda simplificstic minimap, but not simple on features.
+    *Kinda simplified minimap, but not simple on features.
     *Draws passable area. 
-    *Draws unpassable area.
-    *Option to set or unset buttons for toogling minimap visibility.
-    *Draws partly passable as passable, but then draw unpassable line on the 
-     edge of the tile. You will see what I mean if you test ledders, walls
+    *Draws non passable area.
+    *Option to set or unset buttons for toggling minimap visibility.
+    *Draws partly passable as passable, but then draw non passable line on the 
+     edge of the tile. You will see what I mean if you test ladders, walls
      with walkable upper floor, ladders, bridges and so on.
     *Draws events, but not by default. You need to put comments with certain
      formation, similar like in the notetags. Also, while there is default color
@@ -110,7 +110,7 @@ module Minimap
      set position.
     *Redraws passage map on changing vehicle, according the new passability.
      For example, riding boat will turn all water tiles as passable, and all
-     ground as unpassable. Region and terrain tag, sane as damage floor 
+     ground as no passable. Region and terrain tag, sane as damage floor 
      remain unchanged.
      When using airship, will draw the land ok tiles, instead passable tiles.
      Otherwise riding airship means to have one color minimap, with no tiles
@@ -125,11 +125,7 @@ module Minimap
     *Reacts on loop maps, as then the minimap loops too.
      The x and y coordinates are the coordinate of the upper left corner.
     *Option to determine how deep to look in event commands for the needed
-     comment tags. In ideal case, should be setted to look only the top one
-     comment, but if there is other script requiring comments to be on top,
-     then you can set to look for second command or third and so on.
-     Merging same comment to have many tags for the different scripts is option
-     too.
+     comment tags.
 =end
 
 # ============================================================================
