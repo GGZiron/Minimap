@@ -85,6 +85,7 @@ module Minimap
      formation, similar like in the notetags. Also, while there is default color
      for the events characters, you can set to use different one, to make
      characters standing out of the crowd(quest NPC, point of special interest).
+    *Player input options.
     *Option to draw regions and terrain tags too.
     *Draws damage floor.
     *Updates player and event movement on straight move, diagonal move, jump,
