@@ -73,6 +73,7 @@ module Minimap
   but is drawn only once per awhile. Then, it updates characters acording their 
   movement. If sometimething doesn't update properly, then there is either
   bug in my script, or there is other script that not so compatible with mine.
+ 
   This said, there are script calls that would completely redraw entire map,
   or selected rectangle from it. They would be useful only if you know what
   actions my minimap doesn't respond to, and if that doesn't happen too often.
@@ -80,21 +81,22 @@ module Minimap
   the window viewport will have the size you set in settings.
   That bitmap is redrawn when player changes vehicle, or visit new map, or
   on script calls, which I provide bellow.
+  
   Good example for when you would need to redraw manually the map is, if the 
   player recieve swimming ability by another script, and you want the new 
   passability to be reflected on my minimap. Player having through passage flag 
   would not reflect on my minimap, nor it refelcts how events are drawn. 
   If they have the page comment tag, they will be drawn, and if they don't, 
   they won't.
-  It checks only for events that have minimap color (it iterate through the
-  others, but skips them after few simple conditional checks).
+  It checks only for events that have minimap color.
   If minimap is not visible, then is not updated at all. It would be updated
   ocne is visible.
   
   Features:
     *Kinda simplificstic minimap, but not simple on features.
     *Draws passable area. 
-    *Draws unpassable area. 
+    *Draws unpassable area.
+    *Option to set or unset buttons for toogling minimap visibility.
     *Draws partly passable as passable, but then draw unpassable line on the 
      edge of the tile. You will see what I mean if you test ledders, walls
      with walkable upper floor, ladders, bridges and so on.
@@ -182,11 +184,10 @@ module Minimap
   #cut scene, and don't want the player to be able to toogle minimap, or
   #simply the player didn't unlocked the minimap yet.
   BUTTON_SENSIBILITY = 0.4 
-  #It will wait 0.5 second before the button work again.
+  #It will wait 0.4 seconds before the button work again.
   #You can set to lesser value or higher value.
   #As seen from default value, the provided value can be decimal.
   #When decimal, the actual time could vary with fragment of the second.
-  
 
   UPDATE_WHEN_DISSABLED = true #default is true
   #By default, minimap will update even when disabled.
