@@ -339,7 +339,7 @@ module Minimap
   and  tiles between y1 and y2 (An rectangle area).
   The coordinate x2 can be same as x1, and y2 can be same as y1, so to redraw 
   only one tile. Coordinates x1 and y1 must be same or smaller value than x2
-  and y2, otherwise it will the redraw request will be ignored.
+  and y2, otherwise the redraw request will be ignored.
   
   Possible good reason to redraw: Other script changed the tile data, or 
   changed passability, and my minimap doesn't seem to react on that. 
