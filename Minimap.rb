@@ -1,4 +1,4 @@
-($imported ||= {})[:GGZiron_Minimap] = '1.0.0'
+($imported ||= {})[:GGZiron_Minimap] = '1.0.1'
 
 module Minimap
 
