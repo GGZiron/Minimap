@@ -15,7 +15,7 @@ module Minimap
   Allowed to edit, and allowed to post your edit, but together with link to this
   script tread in RPG Maker forums. Not the case if the very post is within
   the tread of this script in RPG Maker forums, then link not needed.
-  Version: 1.0.0
+  Version: 1.0.1
   
   Script Purpose: Adds Minimap on the Scene Map, to be used for navigation.
   Compitability: Check it yourself, for your project :).
@@ -33,7 +33,9 @@ module Minimap
   
   Version History:
    Version 1.0.0 Realeased on: 29/08/2019
-   That is the initial version. 
+   That is the initial version.
+   Version 1.0.1 Released on 29/08/2019
+    Fixed an issue with small looping maps.
   
   Made this script with the idea to be as compitable as possible. Also made
   it to be as processor sparing as possible. This said, that does not mean 
@@ -610,7 +612,6 @@ module Minimap
 # Abjust Minimap (called only externally) =================================
     def abjust_minimap(plane) #parameter must be Plane object
       #Abjust a minimap holder, Plane object.
-      return if map.width <= WIDTH && map.height <= HEIGHT
       w = width; h = height
       x = @player_x - w/2; y = @player_y - h/2
       x = abjust_x(x, w) unless map.loop_horizontal?
