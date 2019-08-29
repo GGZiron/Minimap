@@ -1,6 +1,9 @@
   Script Name: GGZiron's Minimap
+
   Author: GGZiron
+
   Engine: RPG Maker VX Ace
+
   Terms: Free for non commercial projects. Sending me a copy of your game 
   would be appreciated, but is not mandatory.
   For commercial projects, I request free copy or activation code for the game. 
