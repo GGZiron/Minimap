@@ -27,6 +27,7 @@ module Minimap
   as the probability to like the default is not too high, especially if you
   love to dash in debug through during playtest.
   
+Entry bellow comes with my initial version:
   Warning!! As that is my initial version, you might want me to patch it a 
   little before including that into your project. Currently, recommended only
   for preview purpose. Still, you can include it in your project, if you see
