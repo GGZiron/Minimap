@@ -1,4 +1,4 @@
-($imported ||= {})[:GGZiron_Minimap] = '1.0.1'
+($imported ||= {})[:GGZiron_Minimap] = '1.1.0'
 
 module Minimap
 
@@ -6,16 +6,17 @@ module Minimap
   Script Name: GGZiron's Minimap
   Author: GGZiron
   Engine: RPG Maker VX Ace
-  Terms: Free for non commercial projects. Sending me a copy of your game 
-  would be appreciated, but is not mandatory.
-  For commercial projects, I request free copy or activation code for the game. 
-  Must be credited as GGZiron in both commercial and non commercial projects.
+  Terms(updated): Free for non commercial and commercial projects. 
+  Sending me a copy of your game would be very appreciated, 
+  but is not mandatory. With terms update, that so even for commercial
+  projects. 
+
   Not allowed to repost, only allowed to post link to this script tread in
   RPG maker forum.
   Allowed to edit, and allowed to post your edit, but together with link to this
   script tread in RPG Maker forums. Not the case if the very post is within
   the tread of this script in RPG Maker forums, then link not needed.
-  Version: 1.0.1
+  Version: 1.1.0
   
   Script Purpose: Adds Minimap on the Scene Map, to be used for navigation.
   Compitability: Check it yourself, for your project :).
@@ -31,11 +32,37 @@ module Minimap
   for preview purpose. Still, you can include it in your project, if you see
   no issues. Just be sure to check for updates :).
   
+  Known issue: Objects in my minimap are part of same bitmap, instead to be
+  their own sprites. To handle that, script redraws tiles when they move.
+  That same for player, and result of it his movement there looks very bad.
+  Will try to work on that for my next update.
+  
   Version History:
    Version 1.0.0 Realeased on: 29/08/2019
    That is the initial version.
    Version 1.0.1 Released on 29/08/2019
     Fixed an issue with small looping maps.
+   Version 1.1.0 Released on 31/08/2019
+    Butchered a lot of code. Hope for better :)
+    *New Feature: Map List. See more about it on general options.
+    *Option to change in game the variable, that determines if map
+    *should update even when disabled.
+    *When disabled map is set to not update, it will now draw too, 
+     preventing short game freeze for no apparent reason when
+     going to new map.
+    *Minimap characters are now their own Sprites (one colored tile sprites)
+     That makes their movement smoother.
+    *Added aditional support for vehicles.
+    *Loopable map smaller than set minimap dimention will reduce the minimap 
+     size too. They wouldn't in the previous version. Did so because when the
+     real area could be populated with characters, the repeat areas would be 
+     empty, and that will break the illusion. In previous verion characters
+     were part of minimap bitmap, so there was not a problem.
+    *Needs more save data. 
+    *New script calls.
+   Once again, Mithran's debug script was of great service to me.
+   Little trivia, my crashes was not random at all, but with 100 % certancy,
+   before I added the dispose code for the minimap character sprites.
   
   Made this script with the idea to be as compitable as possible. Also made
   it to be as processor sparing as possible. This said, that does not mean 
@@ -58,8 +85,10 @@ module Minimap
   It checks only for events that have minimap color. Minimap is still
   updated, even when not visible. There is option bellow that changes that,
   but doing that have its downside too.
+  With version 1.1.0: Forbiden maps would not update, as is assumed that
+  the map lists won't be altered too often, but only once per awhile, if at all.
  
-  This said, there are script calls that would completely redraw entire map,
+  There are script calls that would completely redraw entire map,
   or selected rectangle from it. They would be useful only if you know what
   actions my minimap doesn't respond to, and if that doesn't happen too often.
   The script draws bitmap with the whole map, but the part that fit within
@@ -104,10 +133,12 @@ module Minimap
      higher priority. Objects are: player, events, damage floor, region,
      terrain_tag, vehicle. When two events share a tile, it will draw the one
      with higher id number.
+     With version 1.1.0, objects are on two groups.
     *Configurable minimap size; transparency; x, y and z coordinates.
     *Reacts on loop maps, as then the minimap loops too.
     *Option to determine how deep to look in event commands for the needed
      comment tags.
+    *With version 1.1.0: Maps List. See in general options about it.
      
   Does not feature followers display (for now)!!  
 =end
@@ -119,6 +150,38 @@ module Minimap
   ENABLED_AT_BEGINNING = true
   #Map will be visible with game start. There is script call to change
   #that at anytime.  
+  
+  MAPS_LIST = [] #Used to forbid or allow maps, depending MAPS_LIST_FORBID 
+  #value.
+  #Put all the maps ID's you want in the list at the beggining of the game.
+  #EXAMPLE MAPS_LIST
+  #MAPS_LIST = [1, 2, 3, 7] #Would affect maps with id 1, 2, 3 and 7
+  MAPS_LIST_FORBID = true
+  #set to true or false. 
+  #When false, the map in the maps list will be displayed
+  #if all the other display condisions are on. If map display is disabled
+  #then they still won't display.
+  #Set to true, if you want to forbid the maps. When true, the
+  #maps in the array will not be displayed. The others will be displayed,
+  #if all other conditions are there.
+  #If you want all maps initially allowed, keep MAP_LIST empty, and set
+  #MAPS_LIST_FORBID to true. That's the default settings.
+  #If you want all maps initially to be forbiden, keep MAP_LIST empty, and
+  #set MAPS_LIST_FORBID to false.
+  #You can expand that map list during game with script call, which I provide
+  #in the Script Calls section.
+  
+  UPDATE_WHEN_DISSABLED = true #default is true
+  #By default, minimap will update even when disabled.
+  #You can set it to false, so is not updated when disabled, and that might 
+  #somehow improve the performance, but will also need to completely
+  #redraw the minimap, when enabled again. So, it has it's downside too.
+  #New with version 1.1.0.
+  #You can change that behavior in game with script call, provided in the 
+  #script call header.
+  #As is assumed that the allowed maps list won't be changed every frame, 
+  #a map that is forbiden will not be drawn and will not update regardless of
+  #how you set this option.
   
   COMMENT_SCANER_INI = 1
   #Will start scanning from very first event command for match value
@@ -160,24 +223,17 @@ module Minimap
   #entirely disable button minimap toggle functionality
   
   BUTTON_CONTROL_SWITCH = 0
-  #Set to Switch Id from the Event Editor. When that switch is on, player will
-  #be able to turn on and off the minimap. When is off, it will be not.
-  #Keep value as zero, if you do not intend to change in game the player
-  #access to toggle button
-  #In game chance of access to toggle button would be useful, if you have
-  #cut scene, and don't want the player to be able to toggle minimap, or
-  #simply the player didn't unlocked the minimap yet.
+  #Set to Switch Id (switches used in the Event Editor). When that switch is on,
+  #player will be able to turn on and off the minimap. When is off, it will be 
+  #not. Keep value as zero, if you do not intend to change in game the player
+  #access to toggle button. In game chance of access to toggle button would be 
+  #useful, if you have cut scene, and don't want the player to be able to 
+  #toggle minimap, or simply the player didn't unlocked the minimap yet.
   BUTTON_SENSIBILITY = 0.4 
   #It will wait 0.4 seconds before the button work again.
-  #You can set to lesser value or higher value.
+  #You can set to lesser or higher value.
   #As seen from default value, the provided value can be decimal.
   #When decimal, the actual time could vary with fragment of the second.
-
-  UPDATE_WHEN_DISSABLED = true #default is true
-  #By default, minimap will update even when disabled.
-  #You can set it to false, so is not updated when disabled, and that might 
-  #somehow improve the performance, but will also need to completely
-  #redraw the minimap, when enabled again. So, it has it's downside too.
 
 # ============================================================================
 #                       How to draw Events on Minimap
@@ -211,7 +267,7 @@ module Minimap
   WIDTH = 35
   #Minimap's width. How many tiles per line. Multiplying that value to
   #TILE_SIZE would give the screen width in pixel(add few more for the window
-  #border, and you get the total window width)
+  #border, and you get the total window width).
   #If the actual map have less tiles width than the desired WIDTH of the 
   #minimap, the minimap's width will be reduced.
   HEIGHT = 20 #Same as WIDTH, but here how many tiles are per column.
@@ -231,10 +287,10 @@ module Minimap
   #Also, knowing the dimention of your screen and minimap, you can set
   #literal values instead formulas. Y uses literal value. 
   Z = 3 #The z coordinate of the window, that will contain the minimap.
+  #The minimap viewport will be with one higher.
 
   OPACITY = 180 #The minimap's opacity. Valid range: 0 - 255.
   #Does not effect the opacity of the window, that holds the minimap.
-  
   
   WINDOW_BORDER = 5
   #Used to know how much space it will need for the Window Border. On default
@@ -242,7 +298,7 @@ module Minimap
   #different one, you should abjust the value so the minimap fit to your border.
   #It have somewhat padding functionality too, if value incresed above actual 
   #border size.
-  #Does not define Window Border size!
+  #Does not define the actual Window Border size!
   WINDOW_OPACITY = 255 #Set between 0 and 255
   WINDOW_BACK_OPACITY = 0 #Set between 0 and 255
   #Above settings set the opacity of the window itself, that holds the
@@ -274,19 +330,18 @@ module Minimap
       
 
   #Do not add entries, only rearange their order, or remove.
-  PRIORITY =[
-            :player, :events, :vehicle, :region, :terrain_tag, :damage_floor
-            ]
+  PRIORITY_TILES =      [:region, :terrain_tag, :damage_floor]
+  PRIORITY_CHARACTERS = [:player, :events, :vehicles]
+  
   #Removed entry would not display on the minimap, ever(unless there is some
   #sort modification to my script).
   #This said, no comment tags would make events to appear, if you remove them from
   #this array.
   #That array determines the priority of map objects, if two share
   #same cell. Those who are first are with higher priority.
-  #Player would be with highest priority, and damage floor
-  #with lowest. Passability colors are bellow everything, that's why
-  #they are not in the array. Just doesn't make sence they to be above
-  #something, otherwise that something would never display.
+  #With version 1.1.0, they are split into two arrays. I do not see point
+  #any tile object to be above character object. Also, tiles are part
+  #of the minimap bitmap, while character objects are indepedent sprites.
 
   REGIONS = { #Do not edit this line
 # Entry format:
@@ -322,6 +377,25 @@ module Minimap
   Minimap::enabled = true 
   Minimap::enabled = false
   The first one enables it, the second one disables it.
+  
+  Minimap::map_list_add(map_id) 
+  Minimap::map_list_add(map_id_1, map_id_2, map_id_3, ... map_id_n) 
+  Adds to the maps list all the entries. Would those maps be displayed or
+  ignored, depends from MAPS_LIST_FORBID, which you set in settings.
+  
+  Minimap::map_list_drop(map_id)
+  Minimap::map_list_drop(map_id_1, map_id_2, map_id_3, ... map_id_n) 
+  Drops entries from the maps list. 
+  
+  Minimap::update_when_disabled = false 
+  Won't draw and update maps when they are hidden.
+ 
+  Minimap::update_when_disabled = true  
+  Will draw and update maps when eve they are hidden.
+  If currently hidden, the minimap will be drawn on that script call,
+  unless is forbiden to show.
+    
+  
   If you need to redraw minimap entirely, because it happens something that
   my minimap didn't react on, you can use this script call:
   
@@ -335,7 +409,7 @@ module Minimap
   How costly? With purpose of testing, I did tried what happen if script
   redraws map every frame. Frame rate fell to 3. That how costly it is.
   
-  If you need only to redraw just certain area, you can use this
+  If you need to redraw just certain area, you can use this
   script call:
   Minimap::redraw_area(x1, y1, x2, y2)
   Doing that, the script will redraw only tiles between x1 and x2,
@@ -343,6 +417,9 @@ module Minimap
   The coordinate x2 can be same as x1, and y2 can be same as y1, so to redraw 
   only one tile. Coordinates x1 and y1 must be same or smaller value than x2
   and y2, otherwise the redraw request will be ignored.
+  
+  From version 1.1.0, redrawing map does not redraw characters, only
+  the tiles. Characters are their own sprites now.
   
   Possible good reason to redraw: Other script changed the tile data, or 
   changed passability, and my minimap doesn't seem to react on that. 
@@ -362,58 +439,94 @@ module Minimap
 # upon your world. You have been warned!! :)
 # ============================================================================
   class << self 
-    attr_reader :player_x, :player_y, :enabled
+    attr_reader :update_when_disabled, :enabled,       :player_x
+    attr_reader :redo_vehicles_flag,   :player_y,      :vehicles
+    attr_reader :redo_events_flag,     :initialized,   :events
+    attr_reader :vehicles_bitmap,      :player_bitmap
     
+    attr_accessor :refresh_player
+    
+    def on_new_game
+      @enabled              = ENABLED_AT_BEGINNING
+      @maps_list            = MAPS_LIST
+      @maps_list_forbid     = MAPS_LIST_FORBID
+      @update_when_disabled = UPDATE_WHEN_DISSABLED
+    end  
+
 # Initialize ===============================================================    
     def initialize
+      see_and_set_if_map_forbiden
       @timer = 0
       @rect = Rect.new(0, 0, TILE_SIZE, TILE_SIZE)
       create_map
+      @initialized = true
     end
     
 # Setters ==================================================================        
     def enabled=(bool)
       @enabled = bool
-      draw_map if bool && @full_map && map && player unless UPDATE_WHEN_DISSABLED
+      draw_map if @enabled && @full_map && map && player && !update_when_disabled
     end  
     
     def set_refresh_flag
       @refresh_flag = true
     end
   
-    def set_event_to_refresh(id, x1, x2, y1, y2)
-      @events ||= Hash.new
-      @events[id] = {:x1 => x1, :x2 => x2, :y1 => y1,:y2 => y2}
+    def set_event_to_refresh(id)
+      @events_rfr ||= Hash.new
+      @events_rfr[id] = true
+    end
+  
+    def set_vehicle_to_refresh(id)
+      @vehicle_rfr ||= Hash.new
+      @vehicle_rfr[id] = true
     end
     
-    def set_events_to_trace(id, color)
-      @events_trc ||= Hash.new
-      @events_trc[id] = color
+    def update_when_disabled=(bool)
+      old_value = update_when_disabled
+      @update_when_disabled = bool
+      draw_map unless old_value
     end  
-  
-    def set_tiles_to_refresh(x, y)
-      @refr_tiles ||= Array.new
-      @refr_tiles << {:x => x, :y => y}
+    
+    def map_list_add(*args)
+      was_forbiden = map_forbiden?
+      for map_id in args do
+        @maps_list.push(map_id) unless @maps_list.include?(map_id)
+      end
+      see_and_set_if_map_forbiden
+      set_refresh_flag if was_forbiden != map_forbiden? && !map_forbiden?
+    end
+    
+    def map_list_drop(*args)
+      was_forbiden = map_forbiden?
+      for map_id in args do
+        @maps_list.delete(map_id) 
+      end
+      see_and_set_if_map_forbiden
+      set_refresh_flag if was_forbiden != map_forbiden? && !map_forbiden?
+    end
+    
+    def see_and_set_if_map_forbiden
+      @map_forbiden  = @maps_list.include?(map.map_id)
+      @map_forbiden ^= !@maps_list_forbid
     end  
     
 # Getters ==================================================================    
     def get_events_to_refresh
-      @events ||= Hash.new
-      return @events
+      @events_rfr ||= Hash.new
+      return @events_rfr
     end
-  
-    def get_events_to_trace
-      @events_trc ||= Hash.new
-      return @events_trc
+    
+    def get_vehicles_to_refresh
+      @vehicle_rfr ||= Hash.new
+      return @vehicle_rfr
     end
         
     def width
-      return WIDTH  if map.loop_horizontal?
       WIDTH < map.width ? WIDTH : map.width
     end 
   
     def height
-      return HEIGHT  if map.loop_vertical?
       HEIGHT < map.height ? HEIGHT : map.height
     end 
     
@@ -430,29 +543,24 @@ module Minimap
     def player; $game_player end
       
 # Check value ===========================================================
-    def vehicles?(x, y)
-      map.boat.pos_nt?(x, y) || map.ship.pos_nt?(x, y) || map.airship.pos_nt?(x, y)
-    end
-  
-    def events?(x, y)
-      map.events_xy(x, y).any? do |event|
-        event.normal_priority? || self.is_a?(Game_Event)
-      end
-    end
+    def map_forbiden? #called every frame
+      @map_forbiden
+    end  
     
 # Draw methods ==========================================================
     def create_map
       return unless map
       @full_map = Bitmap.new(map.width * TILE_SIZE, map.height * TILE_SIZE)
       draw_map
+      draw_map_objects
     end
     
     def draw_map(ini_x = 0, ini_y = 0, fin_x = map.width, fin_y = map.height)
-      clear_update_data
-      @player_x = player.x
-      @player_y = player.y
+      return if map_forbiden? 
+      return unless @enabled || @update_when_disabled
       for x in ini_x..fin_x
         for y in ini_y..fin_y
+          Fiber.yield if y % 10 == 0 if @fiber
           @rect.x = x * TILE_SIZE; @rect.y = y * TILE_SIZE
           color = determine_color(x, y)
           @full_map.fill_rect(@rect, color)
@@ -460,8 +568,9 @@ module Minimap
         end
       end
       @refresh_flag = false
+      @fiber = nil
     end  
-
+    
     def redraw_area(x1 = 0, y1 = 0, x2 = width, y2 = height)
       return unless map
       return unless map.valid?(x1, y1) && map.valid?(x2, y2)
@@ -469,23 +578,53 @@ module Minimap
       draw_map(x1, y1, x2, y2)
     end
     
-    def redraw_player
-      redraw_tile(@player_x, @player_y)
-      @player_x = player.x; @player_y = player.y;
-      redraw_tile(@player_x, @player_y)
-    end 
-  
-    def redraw_event(id)
-      cords = get_events_to_refresh.delete(id)
-      redraw_tile(cords[:x1], cords[:y1])
-      redraw_tile(cords[:x2], cords[:y2])
-    end 
-  
-    def redraw_tile(x, y)
-      @rect.x = x * TILE_SIZE; @rect.y = y * TILE_SIZE
-      color = determine_color(x, y)
-      @full_map.fill_rect(@rect, color) if color
-      do_procs
+    def draw_map_objects
+      draw_player
+      draw_vehicles_bitmap
+    end
+    
+    def draw_player
+      @player_bitmap = Bitmap.new(TILE_SIZE, TILE_SIZE)
+      @player_bitmap.fill_rect(@player_bitmap.rect, player_color)
+    end
+    
+    def draw_vehicles_bitmap
+      @vehicles_bitmap = Bitmap.new(TILE_SIZE, TILE_SIZE)
+      @vehicles_bitmap.fill_rect(@vehicles_bitmap.rect, vehicle_color)
+      make_vehicles_list
+    end
+    
+    def make_vehicles_list
+      @vehicles = Array.new
+      map.vehicles.each_with_index do |v, i|
+        next unless v.is_a?(Game_Vehicle)
+        if v.map_id == map.map_id
+          @vehicles << i
+        end  
+      end  
+    end  
+    
+    def add_vehicle(v_id)
+      @vehicles << v_id unless @vehicles.include?(v_id)
+      @redo_vehicles_flag = true
+    end  
+    
+    def drop_vehicle(v_id)
+      @vehicles.delete(v_id)
+      @redo_vehicles_flag = true
+    end  
+    
+    def add_event(id, color)
+      @events ||= Hash.new
+      @events[id] = Bitmap.new(TILE_SIZE, TILE_SIZE)
+      @events[id].fill_rect(@events[id].rect, color)
+      @redo_events_flag = true
+    end
+    
+    def drop_event(id)
+      @events ||= Hash.new
+      @events.delete(id)
+      redo_events_flag = true
     end  
     
     def do_procs #Used to apply partly pasable tiles.
@@ -499,7 +638,7 @@ module Minimap
 # Color calculating methods =============================================    
     def determine_color(x, y)
       color = nil
-      PRIORITY.each do |object|
+      PRIORITY_TILES.each do |object|
         color = determine_color_with_priority(x, y, object)
         break if color
       end
@@ -509,14 +648,6 @@ module Minimap
   
     def determine_color_with_priority(x, y, object)
       return case object
-        when :player
-          player_color if x == player.x && y == player.y
-        when :events
-          event = map.events_xy(x, y).to_a.reverse.find {|event| event.is_a?(Game_Event) }
-          return unless event
-          return @events_trc[event.id]
-        when :vehicle
-          vehicle_color if Minimap::vehicles?(x, y)
         when :region
           REGIONS[map.region_id(x, y)] if REGIONS[map.region_id(x, y)]
         when :terrain_tag
@@ -567,7 +698,8 @@ module Minimap
     def water_passage(x, y)
       player.map_passable?(x, y, 2) ? passable_color  : unpasable_color
       #Player have boat or ship vehicle, and water have no directional
-      #passage, which is why is enough to check one(any valid) direction.
+      #passage, which is why is enough to check once.
+      #If player really uses vehicle, direction will be omited.
     end  
     
     def airship_landing(x, y)
@@ -610,30 +742,29 @@ module Minimap
     end
     
 # Abjust Minimap (called only externally) =================================
-    def abjust_minimap(plane) #parameter must be Plane object
-      #Abjust a minimap holder, Plane object.
+    def abjust_minimap(viewport)
+      #Abjust the viewport of the minimap holder.
       w = width; h = height
-      x = @player_x - w/2; y = @player_y - h/2
-      x = abjust_x(x, w) unless map.loop_horizontal?
-      y = abjust_y(y, h) unless map.loop_vertical?
-      plane.ox = x * TILE_SIZE; plane.oy = y * TILE_SIZE
+      x = player.x - w/2; y = player.y - h/2
+      x = abjust_x(x) unless map.loop_horizontal?
+      y = abjust_y(y) unless map.loop_vertical?
+      viewport.ox = x * TILE_SIZE; viewport.oy = y * TILE_SIZE
     end  
 
 # Method with uncategorized functionality ==================================
-    def abjust_x(x, w)
+    def abjust_x(x)
       x += 1 until map.valid?(x, 0)
-      x -= 1 until map.valid?(x + (w - 1), 0)
+      x -= 1 until map.valid?(x + (width - 1), 0)
       x
     end
     
-    def abjust_y(y, h)
+    def abjust_y(y)
       y += 1 until map.valid?(0, y) 
-      y -= 1 until map.valid?(0, y + (h - 1))
+      y -= 1 until map.valid?(0, y + (height - 1))
       y
     end 
 
     def toggle_visibility
-      return unless @timer
       return unless @timer == 0
       sec_button = ENABLE_DISABLE_BUTTON2 
       return unless Input.press?(sec_button) unless sec_button.nil?
@@ -644,36 +775,50 @@ module Minimap
       @timer = Graphics.frame_rate * BUTTON_SENSIBILITY
     end  
     
-    def clear_update_data
-      @events.clear if @events
-      @refr_tiles.clear if @refr_tiles
+    def clear_update_data(new_map = false)
+      if new_map
+        @events.each_value do |e| e.dispose end
+        @events.clear
+        @vehicles.clear
+      end  
+      @redo_events_flag = false
+      @redo_vehicles_flag = false
+      @events_rfr.clear if @events_rfr
+      @vehicles_rfr.clear if @vehicles_rfr
+      @player_refresh = false
     end 
  
 # Disposing In Module graphical objects(done on player transfer) =======    
-    def dispose
-      clear_update_data
-      get_events_to_trace.clear
+    def on_player_transfer
+      @initialized = false
+      clear_update_data(true)
       @full_map.dispose
     end
+# DataManager Assistance ===============================================   
+   def make_save_contents(contents)
+     contents[:ggz_minimap_enabled1353]      = @enabled
+     contents[:ggz_minimap_maps_list1353]    = @maps_list
+     contents[:ggz_update_when_disabled1353] = @update_when_disabled
+     contents[:ggz_maps_list_forbid1353]     = @maps_list_forbid
+     contents
+   end  
+   
+  def extract_save_contents(contents)
+    e  = contents[:ggz_minimap_enabled1353]
+    ml = contents[:ggz_minimap_maps_list1353]
+    u  = contents[:ggz_update_when_disabled1353]
+    mf  = contents[:ggz_maps_list_forbid1353]
+    
+    return on_new_game if  e.nil? || ml.nil? || u.nil? || mf.nil?
+    self.enabled = e; @maps_list = ml
+    @update_when_disabled = u; @maps_list_forbid = mf
+    
+  end
     
 # Update: called every frame ===========================================  
     def update
       @timer -= 1 if @timer > 0 if @timer
-      return unless @enabled || UPDATE_WHEN_DISSABLED
-      return draw_map if @refresh_flag
-      get_events_to_trace.each do |id, color|
-        next unless id
-        next unless map.events[id].is_a?(Game_Event)
-        next unless map.events_xy(map.events[id].x, map.events[id].y)
-        redraw_event(id) if Minimap::get_events_to_refresh[id]
-      end
-      if @refr_tiles
-        @refr_tiles.each do |tile|
-          redraw_tile(tile[:x], tile[:y])
-        end
-        @refr_tiles.clear
-      end
-      redraw_player if @player_x != player.x || @player_y != player.y
+      draw_map if @refresh_flag
     end  
     
   end #class self  
@@ -683,66 +828,178 @@ module Minimap
 # ============================================================================
   class Window_Minimap < Window_Base
     def initialize
-      b = Minimap::WINDOW_BORDER
-      w = Minimap::width  * Minimap::TILE_SIZE
-      h = Minimap::height * Minimap::TILE_SIZE
+      b = WINDOW_BORDER
+      w = Minimap::width  * TILE_SIZE
+      h = Minimap::height * TILE_SIZE
       super(0, 0, w + 2 * b, h + 2 * b)
       self.x = screen_x
       self.y = screen_y
       self.opacity = WINDOW_OPACITY
-      self.z = Minimap::Z
+      self.z = Z
       self.back_opacity = WINDOW_BACK_OPACITY
       create_viewport(x + b, y + b, w, h)
+      create_minimap_objects
+      self.visible = false
+    end 
+    
+    def create_minimap_objects
+      create_minimap_plane
+      z = 20
+      PRIORITY_CHARACTERS.reverse.each do |c|
+        case c
+          when :player; create_player_sprite(z)
+          when :events; create_events(z)
+          when :vehicles; create_vehicles(z)
+        end    
+      z += 20  
+      end  
+    end
+    
+    def create_minimap_plane
       @minimap = Plane.new(@viewport)
       @minimap.bitmap = Minimap::full_map
-      @minimap.opacity = Minimap::OPACITY
+      @minimap.opacity = OPACITY
       @minimap.visible = Minimap::enabled
-      self.visible = Minimap::enabled
-      @player_x = 0; @player_y = 0
-    end    
+      abjust_minimap
+    end  
+    
+    def create_player_sprite(z)
+      @player_z = z
+      @player = Sprite.new(@viewport)
+      @player.bitmap = Minimap::player_bitmap
+      @player.x = $game_player.x * TILE_SIZE
+      @player.y = $game_player.y * TILE_SIZE
+      @player.z = @player_z
+    end  
+    
+    def create_vehicles(z)
+      @vehicles_z = z
+      @vehicles = Hash.new
+      Minimap::vehicles.each do |i|
+        @vehicles[i] = Sprite.new(@viewport)
+        @vehicles[i].bitmap = Minimap::vehicles_bitmap
+        @vehicles[i].x = $game_map.vehicles[i].x * TILE_SIZE
+        @vehicles[i].y = $game_map.vehicles[i].y * TILE_SIZE
+        @vehicles[i].z = @vehicles_z
+      end  
+    end
+    
+    def create_events(z)
+      @events_z = z
+      @events = Hash.new
+      Minimap::events.each do |i, b|
+        next unless $game_map.events[i].is_a?(Game_Event)
+        @events[i] = Sprite.new(@viewport)
+        @events[i].bitmap = b
+        @events[i].x = $game_map.events[i].x * TILE_SIZE
+        @events[i].y = $game_map.events[i].y * TILE_SIZE
+        @events[i].z = @events_z
+      end  
+    end
+    
+    def redo_events
+      @events.each_value do |e| e.dispose end
+      @events.clear
+      create_events(@events_z)
+    end
+    
+    def redo_vehicles
+      @vehicles.each_value do |v| v.dispose end
+      @vehicles.clear
+      create_vehicles(@vehicles_z)
+    end  
+    
+    def update_objects
+      redo_events if Minimap::redo_events_flag
+      redo_vehicles if Minimap::redo_vehicles_flag
+      move_player
+      update_events
+      update_vehicles
+    end  
+    
+    def move_player
+      return unless Minimap::refresh_player
+      @player.x = $game_player.x * TILE_SIZE
+      @player.y = $game_player.y * TILE_SIZE
+    end 
+    
+    def update_events
+      create_events if @events.nil? && Minimap::events
+      @events.each do |i, e|
+        next unless Minimap::get_events_to_refresh[i]
+        next if e.x == $game_map.events[i].x  * TILE_SIZE && e.y == $game_map.events[i].x  * TILE_SIZE
+        e.x = $game_map.events[i].x * TILE_SIZE
+        e.y = $game_map.events[i].y * TILE_SIZE
+      end 
+    end
+
+    def update_vehicles
+      Minimap::get_vehicles_to_refresh.each_key do |i|
+        v = $game_map.vehicles[i]
+        next unless v.is_a?(Game_Vehicle)
+        if v.map_id == $game_map.map_id
+          @vehicles[i].x = v.x * TILE_SIZE if @vehicles[i].x * TILE_SIZE != v.x 
+          @vehicles[i].y = v.y * TILE_SIZE if @vehicles[i].y * TILE_SIZE != v.y
+        end  
+      end  
+    end 
 
     def create_viewport(x, y, w, h)
       @viewport = Viewport.new(x, y, w, h)
+      @viewport.visible = Minimap::enabled && Minimap::map_forbiden?
       @viewport.z = self.z + 1
     end
     
     def abjust_minimap
-      Minimap::abjust_minimap(@minimap)
-      @player_x = Minimap::player_x
-      @player_y = Minimap::player_y
+      return unless self.visible
+      Minimap::abjust_minimap(@viewport)
+      @player_x = $game_player.x
+      @player_y = $game_player.y
     end  
     
-    def change_visiblity
-      self.visible     = Minimap::enabled
-      @minimap.visible = Minimap::enabled
+    def change_visiblity(map_alowed = true)
+     self.visible  = Minimap::enabled && map_alowed
+     @viewport.visible = Minimap::enabled && map_alowed
+     @minimap.visible = Minimap::enabled && map_alowed
+     #after load save file, minimap plane doesn't display
+     #even if visible == true, unless is set it to true
+     #again. So far, having no idea why. Is on same viewport.
     end  
     
-    def update #Called Every frame
-      change_visiblity unless self.visible == Minimap::enabled
-      abjust_minimap if @player_x != Minimap::player_x || @player_y != Minimap::player_y
+    def update #Called every frame
+      if Minimap::map_forbiden?
+        change_visiblity(false) if self.visible || @viewport.visible
+      else
+        unless @viewport.visible == Minimap::enabled && @viewport.visible == self.visible
+          change_visiblity
+        end  
+        update_objects
+      end   
+      abjust_minimap if @player_x != $game_player.x || @player_y != $game_player.y 
     end  
     
     def dispose
-      @minimap.bitmap.dispose
       @minimap.dispose
+      @player.dispose
+      @events.each_value do |e|  e.dispose end
+      @vehicles.each_value do |v| v.dispose end
       @viewport.dispose
       super
     end  
     
     def screen_x
-      x = Minimap::X
+      x = X
       x.is_a?(String) ? eval(x) : x
     end 
   
     def screen_y
-      y = Minimap::Y
+      y = Y
       y.is_a?(String) ? eval(y) : y
     end 
     
   end #class Window_Minimap 
   
 end  #module Minimap
-
 # =======================================================================
 #   Abjusting Engine methods bellow, so they work with my minimap.
 # =======================================================================
@@ -769,16 +1026,15 @@ class Scene_Map < Scene_Base
   end
   
   def update(*args)
-    ggz_update_old1353(*args)
     m = Minimap; m::update
+    ggz_update_old1353(*args)
     m::toggle_visibility if Input.press?(m::ENABLE_DISABLE_BUTTON)
   end  
   
   def pre_transfer(*args)
     ggz_pre_transfer_old1353(*args)
     if $game_player.new_map_id != $game_map.map_id
-      @minimap.dispose 
-      Minimap::dispose
+      m = Minimap; @minimap.dispose; m::on_player_transfer
     end  
   end
   
@@ -817,71 +1073,109 @@ class Game_Player < Game_Character
 end 
 # =========================================================================
 #                  class Game CharacterBase
-# Abjusting it so my minimap reacts on characters movements, and set positions.
+# Abjusting it so my minimap reacts on characters movements, and set 
+# positions. Adding one new method.
 # =========================================================================
 class Game_CharacterBase
   
   alias_method :ggzmove_straightold1353, :move_straight
   alias_method :ggzmove_diagonalold1353, :move_diagonal
-  alias_method :ggzmovetoold1353, :moveto
+  alias_method :ggzmovetoold1353,        :moveto
+
   
   def move_straight(*args)
     x1 = @x; y1 = @y
     ggzmove_straightold1353(*args)
     x2 = @x; y2 = @y
-    if (x1 != x2 || y1 != y2) && id != 0 && Minimap::get_events_to_trace[id]
-      Minimap::set_event_to_refresh(id, x1, x2, y1, y2)
-    end  
+    ggz_minimap_add_to_minimap1353(x1, x2, y1, y2)  
   end
   
   def move_diagonal(*args)
     x1 = @x; y1 = @y
     ggzmove_diagonalold1353(*args)
     x2 = @x; y2 = @y
-    if (x1 != x2 || y1 !=y2) && id != 0 && Minimap::get_events_to_trace[id]
-      Minimap::set_event_to_refresh(id, x1, x2, y1, y2)
-    end  
+    ggz_minimap_add_to_minimap1353(x1, x2, y1, y2)
   end
   
   def moveto(*args)
     x1 = @x; y1 = @y
     ggzmovetoold1353(*args)
     x2 = @x; y2 = @y
-    if (x1 != x2 || y1 !=y2) && id != 0 && Minimap::get_events_to_trace[id]
-      Minimap::set_event_to_refresh(id, x1, x2, y1, y2)
-    end  
+    ggz_minimap_add_to_minimap1353(x1, x2, y1, y2)
   end
+  
+# New Method =======================================================
+  def ggz_minimap_add_to_minimap1353(x1, x2, y1, y2)
+    m = Minimap
+    return unless m::initialized
+    if (x1 != x2 || y1 != y2) 
+      m::set_event_to_refresh(id) if self.is_a?(Game_Event) && m::events[id]
+      m::refresh_player = true if self.is_a?(Game_Player)
+    end 
+  end  
   
 end
 # ========================================================================
-#                class Game Character
+#                        class Game Character
 # Abjusting it so minimap reacts on characters jump.
 # ========================================================================
 class Game_Character < Game_CharacterBase
   
   alias_method :ggzjumpold1353, :jump
   
-  def jump(*args)
+    def jump(*args)
     x1 = @x; y1 = @y
     ggzjumpold1353(*args)
     x2 = @x; y2 = @y
-    if (x1 != x2 || y1 !=y2) && id != 0 && Minimap::get_events_to_trace[id]
-      Minimap::set_event_to_refresh(id, x1, x2, y1, y2)
-    end  
+    ggz_minimap_add_to_minimap1353(x1, x2, y1, y2)
   end
   
 end  
 # ========================================================================
-#               class Game Vehicle
-# Adds a attribute reader for @type property.
+#                         class Game Vehicle
+# Adds a attribute reader for @type and @map_id  property.
+# Check if vehicle is set to new location. Support to synch with player
+# in minimap too. Adds a method to get the vehicle id from the map vehicles
+# array.
 # ========================================================================
 class Game_Vehicle < Game_Character
   
-  attr_reader :type
+  alias_method :ggz_set_location_old1353,     :set_location
+  alias_method :ggz_sync_with_player_old1353, :sync_with_player
+  attr_reader  :type, :map_id 
   
+  def set_location(*args)
+    m_id1 = @map_id; x1 = @x; y1 = y
+    ggz_set_location_old1353(*args)
+    m = Minimap
+    return unless m::initialized
+    m_id2 = @map_id; x2 = @x; y2 = y; map_id = $game_map.map_id
+    m::add_vehicle(ggz_get_id1353)  if m_id1 != map_id && m_id2 == map_id
+    m::drop_vehicle(ggz_get_id1353) if m_id1 == map_id && m_id2 != map_id
+    if (x1 != x2 || y1 != y2 || m_id1 != m_id2)
+      m::set_vehicle_to_refresh(id)
+    end  
+  end
+  
+  def ggz_get_id1353
+    $game_map.vehicles.each_with_index do |vehicle, i|
+      return @ggz_vehicle_id = i if self == vehicle
+    end  
+  end  
+  
+  def sync_with_player(*args)
+    m_id1 = @map_id; x1 = @x; y1 = y
+    ggz_sync_with_player_old1353(*args)
+    m_id2 = @map_id; x2 = @x; y2 = y
+    if (x1 != x2 || y1 != y2 || m_id1 != m_id2)
+      ggz_get_id1353 if @ggz_vehicle_id.nil?
+      Minimap::set_vehicle_to_refresh(@ggz_vehicle_id)
+    end  
+  end
+
 end  
 # ========================================================================
-#              class Game Event
+#                        class Game Event
 # Abjusting it so it upon refresh will set its id and color, if event
 # is to be drawn on minimap.
 # ========================================================================
@@ -892,16 +1186,15 @@ class Game_Event < Game_Character
   def refresh(*args)
     ggzrefreshold1353(*args)
     color = Minimap::get_event_color(self)
-    ev_trc = Minimap::get_events_to_trace.delete(id)
-    Minimap::set_tiles_to_refresh(@x, @y) if ev_trc && color.nil?
-    Minimap::set_events_to_trace(id, color) unless color.nil?
+    Minimap::drop_event(id)
+    Minimap::add_event(id, color) unless color.nil?
   end
   
 end
 # ========================================================================
-#              class Data Manager
-# Abjusting it so the initial minimap visibility is initialized, and 
-# current minimap visibility is saved and extracted.
+#                       class Data Manager
+# Abjusting it so it work with my save data, and do my objects 
+# initialisation on new game.
 # ========================================================================
 module DataManager
   
@@ -913,23 +1206,36 @@ module DataManager
 
   def self.setup_new_game(*args)
     ggzsetup_new_gameold1353(*args)
-    Minimap::enabled = Minimap::ENABLED_AT_BEGINNING
+    Minimap::on_new_game
   end
-  
   
   def self.make_save_contents(*args)
     contents = ggzmake_save_contentsold1353(*args)
-    contents[:ggz_minimap_enabled1353] = Minimap::enabled
-    contents
+    Minimap::make_save_contents(contents)
   end
   
   def self.extract_save_contents(*args)
     ggzextract_save_contentsold1353(*args)
-    enabled = args[0][:ggz_minimap_enabled1353]
-    Minimap::enabled = enabled.nil? ? true : enabled
+    Minimap::extract_save_contents(args[0])
   end
   
 end
+# =========================================================================
+#                          class Game Map
+# Abjusting it so it clears the objects track data from the
+# previous scene iteration.
+# =========================================================================
+
+class Game_Map
+  
+  alias_method :ggzupdateold1353, :update
+  
+  def update(*args)
+    Minimap::clear_update_data
+    ggzupdateold1353(*args)
+  end  
+  
+end  
 # =========================================================================
 #                              END OF FILE
 # =========================================================================
