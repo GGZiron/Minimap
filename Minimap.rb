@@ -440,9 +440,9 @@ Entry bellow comes with my initial version:
 # upon your world. You have been warned!! :)
 # ============================================================================
   class << self 
-    attr_reader :update_when_disabled, :enabled,       :player_x
-    attr_reader :redo_vehicles_flag,   :player_y,      :vehicles
-    attr_reader :redo_events_flag,     :initialized,   :events
+    attr_reader :update_when_disabled, :enabled,       :events 
+    attr_reader :redo_vehicles_flag,   :vehicles
+    attr_reader :redo_events_flag,     :initialized   
     attr_reader :vehicles_bitmap,      :player_bitmap
     
     attr_accessor :refresh_player
