@@ -401,7 +401,7 @@ Entry bellow comes with my initial version:
   my minimap didn't react on, you can use this script call:
   
   Minimap::draw_map
-  Redraws entire map
+  Redraws entire map.
   
   Minimap::set_refresh_flag
   Same as above, but is done on the next Minimap update.
