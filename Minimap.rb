@@ -9,7 +9,7 @@ module Minimap
   Terms(updated): Free for non commercial and commercial projects. 
   Sending me a copy of your game would be very appreciated, 
   but is not mandatory. With terms update, that so even for commercial
-  projects. 
+  projects. You have to credit me as GGZiron.
 
   Not allowed to repost, only allowed to post link to this script tread in
   RPG maker forum.
