@@ -556,7 +556,6 @@ Entry bellow comes with my initial version:
         end
       end
       @refresh_flag = false
-      @fiber = nil
     end  
     
     def redraw_area(x1 = 0, y1 = 0, x2 = width, y2 = height)
