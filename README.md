@@ -15,7 +15,7 @@
   script tread in RPG Maker forums. Not the case if the very post is within
   the tread of this script in RPG Maker forums, then link not needed.
   
-  Script Version: 1.1.0
+  Script Version: 1.1.1
   
   Script Purpose: Adds Minimap on the Scene Map, to be used for navigation.
   
