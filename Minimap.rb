@@ -52,8 +52,8 @@ Entry bellow comes with my initial version:
      going to new map.
     *Minimap characters are now their own Sprites (one colored tile sprites)
      That makes their movement smoother.
-    *Added aditional support for vehicles.
-    *Loopable map smaller than set minimap dimention will reduce the minimap 
+    *Added additional support for vehicles.
+    *Loopable map smaller than set minimap dimension will reduce the minimap 
      size too. They wouldn't in the previous version. Did so because when the
      real area could be populated with characters, the repeat areas would be 
      empty, and that will break the illusion. In previous verion characters
@@ -66,7 +66,7 @@ Entry bellow comes with my initial version:
    Version 1.1.1 Released on 01.09.2019
     *Fixed an issue, which would cause game to crash on map without events.
     *Added additional bitmap disposes, that I forgot to do in previous version.
-    *Minimap abjust ox and oy only when player moving, increasing performance.
+    *Minimap adjust ox and oy only when player moving, increasing performance.
      Was idea to do so in previous versions too, but I goofed the conditional
      checks there.
   
@@ -1010,11 +1010,11 @@ Entry bellow comes with my initial version:
   
 end  #module Minimap
 # =======================================================================
-#   Abjusting Engine methods bellow, so they work with my minimap.
+#   Adjusting Engine methods bellow, so they work with my minimap.
 # =======================================================================
 # =======================================================================
 #                          class Scene _Map
-# Abjusting it so it holds an instance of Minimap::Window, and properly 
+# Adjusting it so it holds an instance of Minimap::Window, and properly 
 # update it.
 # =======================================================================
 class Scene_Map < Scene_Base
@@ -1055,7 +1055,7 @@ class Scene_Map < Scene_Base
 end
 # ========================================================================
 #                  class Game Player
-# Abjusting it so my minimap reacts when player get on or off of vehicle.
+# Adjusting it so my minimap reacts when player get on or off of vehicle.
 # Making new attribute reader as well.
 # ========================================================================
 class Game_Player < Game_Character
@@ -1082,7 +1082,7 @@ class Game_Player < Game_Character
 end 
 # =========================================================================
 #                  class Game CharacterBase
-# Abjusting it so my minimap reacts on characters movements, and set 
+# Adjusting it so my minimap reacts on characters movements, and set 
 # positions. Adding one new method.
 # =========================================================================
 class Game_CharacterBase
@@ -1126,7 +1126,7 @@ class Game_CharacterBase
 end
 # ========================================================================
 #                        class Game Character
-# Abjusting it so minimap reacts on characters jump.
+# Adjusting it so minimap reacts on characters jump.
 # ========================================================================
 class Game_Character < Game_CharacterBase
   
@@ -1185,7 +1185,7 @@ class Game_Vehicle < Game_Character
 end  
 # ========================================================================
 #                        class Game Event
-# Abjusting it so it upon refresh will set its id and color, if event
+# Adjusting it so it upon refresh will set its id and color, if event
 # is to be drawn on minimap.
 # ========================================================================
 class Game_Event < Game_Character
@@ -1202,7 +1202,7 @@ class Game_Event < Game_Character
 end
 # ========================================================================
 #                       class Data Manager
-# Abjusting it so it work with my save data, and do my objects 
+# Adjusting it so it work with my save data, and do my objects 
 # initialisation on new game.
 # ========================================================================
 module DataManager
@@ -1231,7 +1231,7 @@ module DataManager
 end
 # =========================================================================
 #                          class Game Map
-# Abjusting it so it clears the objects track data from the
+# Adjusting it so it clears the objects track data from the
 # previous scene iteration.
 # =========================================================================
 
