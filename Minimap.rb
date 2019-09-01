@@ -548,7 +548,6 @@ Entry bellow comes with my initial version:
       return unless @enabled || @update_when_disabled
       for x in ini_x..fin_x
         for y in ini_y..fin_y
-          Fiber.yield if y % 10 == 0 if @fiber
           @rect.x = x * TILE_SIZE; @rect.y = y * TILE_SIZE
           color = determine_color(x, y)
           @full_map.fill_rect(@rect, color)
