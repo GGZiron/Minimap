@@ -1,4 +1,4 @@
-($imported ||= {})[:GGZiron_Minimap] = '1.1.0'
+($imported ||= {})[:GGZiron_Minimap] = '1.1.1'
 
 module Minimap
 
@@ -10,13 +10,12 @@ module Minimap
   Sending me a copy of your game would be very appreciated, 
   but is not mandatory. With terms update, that so even for commercial
   projects. You have to credit me as GGZiron.
-
   Not allowed to repost, only allowed to post link to this script tread in
   RPG maker forum.
   Allowed to edit, and allowed to post your edit, but together with link to this
   script tread in RPG Maker forums. Not the case if the very post is within
   the tread of this script in RPG Maker forums, then link not needed.
-  Version: 1.1.0
+  Version: 1.1.1
   
   Script Purpose: Adds Minimap on the Scene Map, to be used for navigation.
   Compitability: Check it yourself, for your project :).
@@ -61,9 +60,15 @@ Entry bellow comes with my initial version:
      were part of minimap bitmap, so there was not a problem.
     *Needs more save data. 
     *New script calls.
-   Once again, Mithran's debug script was of great service to me.
-   Little trivia, my crashes was not random at all, but with 100 % certancy,
-   before I added the dispose code for the minimap character sprites.
+    Once again, Mithran's debug script was of great service to me.
+    Little trivia, my crashes was not random at all, but with 100 % certancy,
+    before I added the dispose code for the minimap character sprites.
+   Version 1.1.1 Released on 01.09.2019
+    *Fixed an issue, which would cause game to crash on map without events.
+    *Added additional bitmap disposes, that I forgot to do in previous version.
+    *Minimap abjust ox and oy only when player moving, increasing performance.
+     Was idea to do so in previous versions too, but I goofed the conditional
+     checks there.
   
   Made this script with the idea to be as compitable as possible. Also made
   it to be as processor sparing as possible. This said, that does not mean 
@@ -489,24 +494,6 @@ Entry bellow comes with my initial version:
       draw_map unless old_value
     end  
     
-    def map_list_add(*args)
-      was_forbiden = map_forbiden?
-      for map_id in args do
-        @maps_list.push(map_id) unless @maps_list.include?(map_id)
-      end
-      see_and_set_if_map_forbiden
-      set_refresh_flag if was_forbiden != map_forbiden? && !map_forbiden?
-    end
-    
-    def map_list_drop(*args)
-      was_forbiden = map_forbiden?
-      for map_id in args do
-        @maps_list.delete(map_id) 
-      end
-      see_and_set_if_map_forbiden
-      set_refresh_flag if was_forbiden != map_forbiden? && !map_forbiden?
-    end
-    
     def see_and_set_if_map_forbiden
       @map_forbiden  = @maps_list.include?(map.map_id)
       @map_forbiden ^= !@maps_list_forbid
@@ -595,38 +582,12 @@ Entry bellow comes with my initial version:
       make_vehicles_list
     end
     
-    def make_vehicles_list
-      @vehicles = Array.new
-      map.vehicles.each_with_index do |v, i|
-        next unless v.is_a?(Game_Vehicle)
-        if v.map_id == map.map_id
-          @vehicles << i
-        end  
-      end  
-    end  
-    
-    def add_vehicle(v_id)
-      @vehicles << v_id unless @vehicles.include?(v_id)
-      @redo_vehicles_flag = true
-    end  
-    
-    def drop_vehicle(v_id)
-      @vehicles.delete(v_id)
-      @redo_vehicles_flag = true
-    end  
-    
     def add_event(id, color)
       @events ||= Hash.new
       @events[id] = Bitmap.new(TILE_SIZE, TILE_SIZE)
       @events[id].fill_rect(@events[id].rect, color)
       @redo_events_flag = true
     end
-    
-    def drop_event(id)
-      @events ||= Hash.new
-      @events.delete(id)
-      redo_events_flag = true
-    end  
     
     def do_procs #Used to apply partly pasable tiles.
       return unless @procs
@@ -764,6 +725,51 @@ Entry bellow comes with my initial version:
       y -= 1 until map.valid?(0, y + (height - 1))
       y
     end 
+    
+    def map_list_add(*args)
+      was_forbiden = map_forbiden?
+      for map_id in args do
+        @maps_list.push(map_id) unless @maps_list.include?(map_id)
+      end
+      see_and_set_if_map_forbiden
+      set_refresh_flag if was_forbiden != map_forbiden? && !map_forbiden?
+    end
+    
+    def map_list_drop(*args)
+      was_forbiden = map_forbiden?
+      for map_id in args do
+        @maps_list.delete(map_id) 
+      end
+      see_and_set_if_map_forbiden
+      set_refresh_flag if was_forbiden != map_forbiden? && !map_forbiden?
+    end
+    
+    def add_vehicle(v_id)
+      @vehicles << v_id unless @vehicles.include?(v_id)
+      @redo_vehicles_flag = true
+    end  
+    
+    def drop_vehicle(v_id)
+      @vehicles.delete(v_id)
+      @redo_vehicles_flag = true
+    end  
+    
+    def drop_event(id)
+      @events ||= Hash.new
+      @events[id].dispose if @events[id]
+      @events.delete(id)
+      redo_events_flag = true
+    end
+    
+    def make_vehicles_list
+      @vehicles = Array.new
+      map.vehicles.each_with_index do |v, i|
+        next unless v.is_a?(Game_Vehicle)
+        if v.map_id == map.map_id
+          @vehicles << i
+        end  
+      end  
+    end  
 
     def toggle_visibility
       return unless @timer == 0
@@ -780,6 +786,7 @@ Entry bellow comes with my initial version:
       if new_map
         @events.each_value do |e| e.dispose end
         @events.clear
+        @vehicles_bitmap.dispose
         @vehicles.clear
       end  
       @redo_events_flag = false
@@ -888,6 +895,7 @@ Entry bellow comes with my initial version:
     def create_events(z)
       @events_z = z
       @events = Hash.new
+      return unless Minimap::events
       Minimap::events.each do |i, b|
         next unless $game_map.events[i].is_a?(Game_Event)
         @events[i] = Sprite.new(@viewport)
@@ -922,6 +930,7 @@ Entry bellow comes with my initial version:
       return unless Minimap::refresh_player
       @player.x = $game_player.x * TILE_SIZE
       @player.y = $game_player.y * TILE_SIZE
+      abjust_minimap
     end 
     
     def update_events
@@ -962,8 +971,8 @@ Entry bellow comes with my initial version:
      self.visible  = Minimap::enabled && map_alowed
      @viewport.visible = Minimap::enabled && map_alowed
      @minimap.visible = Minimap::enabled && map_alowed
-     #after load save file, minimap plane doesn't display
-     #even if visible == true, unless is set it to true
+     #After load save file, minimap plane doesn't display
+     #even if visible == true, unless is set to true
      #again. So far, having no idea why. Is on same viewport.
     end  
     
@@ -974,9 +983,8 @@ Entry bellow comes with my initial version:
         unless @viewport.visible == Minimap::enabled && @viewport.visible == self.visible
           change_visiblity
         end  
-        update_objects
+        update_objects if Minimap::enabled
       end   
-      abjust_minimap if @player_x != $game_player.x || @player_y != $game_player.y 
     end  
     
     def dispose
