@@ -785,9 +785,10 @@ Entry bellow comes with my initial version:
     def clear_update_data(new_map = false)
       if new_map
         @events.each_value do |e| e.dispose end
-        @events.clear
+        @full_map.dispose
         @vehicles_bitmap.dispose
-        @vehicles.clear
+        @events.clear
+        @vehicles.clear     
       end  
       @redo_events_flag = false
       @redo_vehicles_flag = false
