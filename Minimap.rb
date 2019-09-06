@@ -458,7 +458,7 @@ Entry bellow comes with my initial version:
   
   Tested on: Tsukihime's tile swap. It works, but there needs to be at least
   one frame wait between the call that swap the region, and the call
-  that will redraw map coordinate. Minimap will never react on Hime's regiom
+  that will redraw map coordinate. Minimap will never react on Hime's region
   swap, unless redraw is requested.
   Tested also when removing tile event, that is with bellow player priority.
   On that one my minimap will not react, but redrawing the spot fixes the issue.
