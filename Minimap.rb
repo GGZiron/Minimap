@@ -435,7 +435,7 @@ Entry bellow comes with my initial version:
   If you need to redraw minimap entirely, because it happens something that
   my minimap didn't react on, you can use this script call:
   
-  Minimap::redraw_map
+  Minimap::redraw_area
   Redraws entire map.
   In earlier versions i provided Minimap::draw_map, but that will not work
   anymore. That so because while it will draw map again, it will use the old
