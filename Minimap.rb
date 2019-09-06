@@ -1,4 +1,4 @@
-($imported ||= {})[:GGZiron_Minimap] = '1.1.1'
+($imported ||= {})[:GGZiron_Minimap] = '1.2.0'
 
 module Minimap
 
@@ -15,27 +15,33 @@ module Minimap
   Allowed to edit, and allowed to post your edit, but together with link to this
   script tread in RPG Maker forums. Not the case if the very post is within
   the tread of this script in RPG Maker forums, then link not needed.
-  Version: 1.1.1
+  Version: 1.2.0
   
   Script Purpose: Adds Minimap on the Scene Map, to be used for navigation.
   Compitability: Check it yourself, for your project :).
   
   How easy to install?: From medium to hard, dependings how much of the settings
   you plan to change. Even if none, you gotta place comment tags for events,
-  if you want them drawn on minimap, and check the toogle option with button, 
+  if you want them drawn on minimap, and check the toggle option with button, 
   as the probability to like the default is not too high, especially if you
   love to dash in debug through during playtest.
+  
+  Known flaws: Works kinda slow for very big maps. Also, it consumes a lot of
+  memory. With the default TILE_SIZE (given in settings bellow) in 500 x 500 
+  map, a default project would eat nearly 80 mb operative memory, when without 
+  my script on same map it takes only 41 mb. That is so because it draws one 
+  large bitmap. To prevent that, I should write some sorta tile map, but so far 
+  I couldn't figure how to make one, and cannot use the engine's Tilemap for the 
+  minimap. With not too big maps I believe this flaw won't be a deal breaker.
+  Other know issue is with the looping maps. While minimap itself will
+  loop properly, the event characters will not. They would appear suddenly on
+  their spots, when the player is relocated at the oposite end.
   
 Entry bellow comes with my initial version:
   Warning!! As that is my initial version, you might want me to patch it a 
   little before including that into your project. Currently, recommended only
   for preview purpose. Still, you can include it in your project, if you see
   no issues. Just be sure to check for updates :).
-  
-  Known issue: Objects in my minimap are part of same bitmap, instead to be
-  their own sprites. To handle that, script redraws tiles when they move.
-  That same for player, and result of it his movement there looks very bad.
-  Will try to work on that for my next update.
   
   Version History:
    Version 1.0.0 Realeased on: 29/08/2019
@@ -69,10 +75,15 @@ Entry bellow comes with my initial version:
     *Minimap adjust ox and oy only when player moving, increasing performance.
      Was idea to do so in previous versions too, but I goofed the conditional
      checks there.
-  
-  Made this script with the idea to be as compitable as possible. Also made
-  it to be as processor sparing as possible. This said, that does not mean 
-  I achieve those, only highlighting I did some efforts about it.
+   Version 1.2.0 Released on 06/09/2019
+    *Now it use better method to scan the entire map passability at once, which
+     improves the performance.
+    *Add passability data into cache, to make map drawing faster(needed
+     for map revisit or for vehicle change). More about caches in settings. 
+    *Fixed some script calls.
+    *Fixed some bugs.
+    
+    
   Please, do report me bugs, if you see some. Especially the deal breakers.
   All bug reports are more than welcome, just be polite, please.
   Not compitable with other script? While I do not promise to fix that, feel 
@@ -88,9 +99,9 @@ Entry bellow comes with my initial version:
   bug in my script, or there is other script that not so compatible with mine.
   It adds bit to the save data. In initial version, that is used only to keep
   track if minimap is currently enabled, or disabled. 
-  It checks only for events that have minimap color. Minimap is still
-  updated, even when not visible. There is option bellow that changes that,
-  but doing that have its downside too.
+  It checks only for events that have minimap color. When not visible, Minimap 
+  is still updated. There is option bellow that changes this, but doing that 
+  have its downside too.
   With version 1.1.0: Forbiden maps would not update, as is assumed that
   the map lists won't be altered too often, but only once per awhile, if at all.
  
@@ -102,13 +113,9 @@ Entry bellow comes with my initial version:
   That bitmap is redrawn when player changes vehicle, or visit new map, or
   on script calls, which I provide bellow.
   
-  Good example for when you would need to redraw manually the map is, if the 
-  player recieve swimming ability by another script, and you want the new 
-  passability to be reflected on my minimap. Player having through passage flag 
-  would not reflect on my minimap, nor it refelcts how events are drawn. 
-  If they have the comment tag in the active page, they will be drawn, and if 
-  they don't, they wouldn't be redrawn. Event through flag or priority not
-  set in mind too.
+  With version 1.2.0, minimap doesn't use the player's passability anymore,
+  but the map's passage flags. Thus, any script that alters the player
+  passability would not be reflected on minimap.
   
   Features:
     *Kinda simplified minimap, but not simple on features.
@@ -189,11 +196,23 @@ Entry bellow comes with my initial version:
   #a map that is forbiden will not be drawn and will not update regardless of
   #how you set this option.
   
+  CACHE_MAPS = []
+  #Upon visiting map, the map passability data will be stored within
+  #Table object, making it a lot faster to be drawn each next time.
+  #A table object increases the memory the game uses. One 500 x 500 map, if
+  #cached, would take about one MB operative memory. 
+  #Maps that are not in that list still make entry at the cache on visit, 
+  #but that entry is removed once player leaves map.
+  #Recomended to use for bigger maps. Of course, will make small maps to load
+  #even faster, and they won't take too much of data.
+  #Even with map inlcuded in Cache, map drawning process won't be too fast, 
+  #if map is very big. Cache does not become part of save data.
+  
   COMMENT_SCANER_INI = 1
   #Will start scanning from very first event command for match value
   COMMENT_SCANER_FIN = 2 #Set to one, if you want to check only top comment.
   #Will end scanning after third event command.
-  #Keep in mind, some event commands get more slots, and even though sometimes
+  #Keep in mind, some event commands get more slots, and even if sometimes
   #it would appear a command is second on the list, could be actually third.
   #That's why, better do not place non-comment commands above the one with
   #the comment tag.
@@ -228,6 +247,9 @@ Entry bellow comes with my initial version:
   #Notice: Only nil value disables second button. Setting to false would 
   #entirely disable button minimap toggle functionality
   
+  #If map is forbiden, buttons pressing will do nothing, even if all other
+  #conditions are present.
+  
   BUTTON_CONTROL_SWITCH = 0
   #Set to Switch Id (switches used in the Event Editor). When that switch is on,
   #player will be able to turn on and off the minimap. When is off, it will be 
@@ -260,6 +282,10 @@ Entry bellow comes with my initial version:
 # You can add more entries at the color array, which once added, can be used
 # as well.
 
+# If you use event as tile, and that tile is non passable, then is good idea
+# to use <minimap color 2> on that said event.
+# Is good to be noted tile events with bellow priority doesn't need that,
+# as the map passabilty data reacts on it.
 # Important!! Space between words in comment must stay as in the provided
 # example, and it won't recognize tags with upper case letters.
 # Recomended to copy paste from here, and only change the color, if you use
@@ -336,7 +362,11 @@ Entry bellow comes with my initial version:
       
 
   #Do not add entries, only rearange their order, or remove.
-  PRIORITY_TILES =      [:region, :terrain_tag, :damage_floor]
+  PRIORITY_TILES = [:region, :terrain_tag, :damage_floor]
+  #Very recomended to remove entries that will not be used, ever.
+  #That will reduce the maps loading time, as there will be much less checks.
+  #Don't forget to re-add, if you change mind later.
+  
   PRIORITY_CHARACTERS = [:player, :events, :vehicles]
   
   #Removed entry would not display on the minimap, ever(unless there is some
@@ -351,9 +381,9 @@ Entry bellow comes with my initial version:
 
   REGIONS = { #Do not edit this line
 # Entry format:
-# region_id => COLORS[color_key],
+# region_id => color_key,
 # Example entry:
-#   50 => COLORS[7], #Region 50 will get white color.
+#    50 => 7, #Region 50 will get color 7 from COLORS hash.
 # Te active entries should not be commented (no # in the beginning of the line).
 # Add your entries:
     
@@ -363,9 +393,9 @@ Entry bellow comes with my initial version:
 # ==========================================================================
   TERRAIN_TAGS = { #Do not edit this line
 # Entry format:
-# terrain_tag_id => COLORS[color_key],
+# terrain_tag_id => color_key,
 # Example entry:
-#   7 => COLORS[7], #All tiles with terrain tag 7 will be colored in white.
+#   7 => 7, #All tiles with terrain tag 7 will get color 7 from COLORS hash.
 # Te active entries should not be commented (no # in the beginning of the line).
 # Add more entries:
 
@@ -395,25 +425,27 @@ Entry bellow comes with my initial version:
   
   Minimap::update_when_disabled = false 
   Won't draw and update maps when they are hidden.
+  For large maps, can cause lag spike when enabled again. 
  
   Minimap::update_when_disabled = true  
   Will draw and update maps when eve they are hidden.
   If currently hidden, the minimap will be drawn on that script call,
   unless is forbiden to show.
-    
   
   If you need to redraw minimap entirely, because it happens something that
   my minimap didn't react on, you can use this script call:
   
-  Minimap::draw_map
+  Minimap::redraw_map
   Redraws entire map.
-  
-  Minimap::set_refresh_flag
-  Same as above, but is done on the next Minimap update.
+  In earlier versions i provided Minimap::draw_map, but that will not work
+  anymore. That so because while it will draw map again, it will use the old
+  passability data. So, use Minimap::redraw_map instead, if other script 
+  changed terrain, regions, terrain tag or damage floors.
   
   While redrawing whole map does the best job, is somewhat costly process.
   How costly? With purpose of testing, I did tried what happen if script
-  redraws map every frame. Frame rate fell to 3. That how costly it is.
+  redraws map every frame. Frame rate fell to 3. In not so big small map.
+  That how costly it is.
   
   If you need to redraw just certain area, you can use this
   script call:
@@ -424,17 +456,26 @@ Entry bellow comes with my initial version:
   only one tile. Coordinates x1 and y1 must be same or smaller value than x2
   and y2, otherwise the redraw request will be ignored.
   
-  From version 1.1.0, redrawing map does not redraw characters, only
-  the tiles. Characters are their own sprites now.
+  Tested on: Tsukihime's tile swap. It works, but there needs to be at least
+  one frame wait between the call that swap the region, and the call
+  that will redraw map coordinate. Minimap will never react on Hime's regiom
+  swap, unless redraw is requested.
+  Tested also when removing tile event, that is with bellow player priority.
+  On that one my minimap will not react, but redrawing the spot fixes the issue.
+  For that instance, there is no need of frame wait between remove tile event
+  and redrawing the map coordinate.
   
-  Possible good reason to redraw: Other script changed the tile data, or 
-  changed passability, and my minimap doesn't seem to react on that. 
-  Then together with the other script call, use mine to update the minimap. 
-  If you need to do that very often though, then you better request for 
-  compitability patch. And if doesn't work well with engines' build-in 
-  functions, then you can file it as bug, which would get higher priority than 
-  compitability patch.
- 
+  If you want to remove manually a passability cache: you can use the following
+  script call:
+  Minimap::clear_cache(map_id) 
+  Will clear a cache entry with the map id.
+  
+  Minimap::clear_cache(map_id1, map_id2, map_id3...map_idn)
+  Will clear the cache entries of all the the maps provided.
+  
+  Minimap::clear_cache
+  Will clear the entire cache.
+   
 =end
 # ============================================================================
 #                         The rest of the script bellow.
@@ -445,33 +486,41 @@ Entry bellow comes with my initial version:
 # upon your world. You have been warned!! :)
 # ============================================================================
   class << self 
-    attr_reader :update_when_disabled, :enabled,       :events 
-    attr_reader :redo_vehicles_flag,   :vehicles
-    attr_reader :redo_events_flag,     :initialized   
-    attr_reader :vehicles_bitmap,      :player_bitmap
+    attr_reader :vehicles_bitmap,     :enabled,    :events 
+    attr_reader :redo_events_flag,    :vehicles,   :player_bitmap      
+    attr_reader :redo_vehicles_flag,  :initialized   
+    attr_reader :update_when_disabled 
     
     attr_accessor :refresh_player
-    
+# Initialize ===============================================================   
+
     def on_new_game
       @enabled              = ENABLED_AT_BEGINNING
       @maps_list            = MAPS_LIST
       @maps_list_forbid     = MAPS_LIST_FORBID
       @update_when_disabled = UPDATE_WHEN_DISSABLED
+      on_game_start
     end  
+   
+    def on_game_start
+      @cache_maps = CACHE_MAPS
+      Mapper::on_game_start
+    end
 
-# Initialize ===============================================================    
     def initialize
+      return if @initialized
       see_and_set_if_map_forbiden
       @timer = 0
       @rect = Rect.new(0, 0, TILE_SIZE, TILE_SIZE)
       create_map
+      draw_map_objects
       @initialized = true
     end
     
 # Setters ==================================================================        
     def enabled=(bool)
       @enabled = bool
-      draw_map if @enabled && @full_map && map && player && !update_when_disabled
+      create_map if @enabled && !update_when_disabled && @map_forbiden
     end  
     
     def set_refresh_flag
@@ -491,7 +540,7 @@ Entry bellow comes with my initial version:
     def update_when_disabled=(bool)
       old_value = update_when_disabled
       @update_when_disabled = bool
-      draw_map unless old_value
+      create_map unless old_value
     end  
     
     def see_and_set_if_map_forbiden
@@ -518,12 +567,9 @@ Entry bellow comes with my initial version:
       HEIGHT < map.height ? HEIGHT : map.height
     end 
     
-    def passable_color;     COLORS[1] end  
-    def unpasable_color;    COLORS[2] end  
     def player_color;       COLORS[3] end
     def event_color;        COLORS[4] end
     def vehicle_color;      COLORS[5] end
-    def damage_floor_color; COLORS[6] end
     def full_map;           @full_map end
       
 # Connectors with external objects ======================================
@@ -537,31 +583,30 @@ Entry bellow comes with my initial version:
     
 # Draw methods ==========================================================
     def create_map
+      @refresh_flag = false
       return unless map
-      @full_map = Bitmap.new(map.width * TILE_SIZE, map.height * TILE_SIZE)
-      draw_map
-      draw_map_objects
-    end
-    
-    def draw_map(ini_x = 0, ini_y = 0, fin_x = map.width, fin_y = map.height)
       return if map_forbiden? 
       return unless @enabled || @update_when_disabled
-      for x in ini_x..fin_x
-        for y in ini_y..fin_y
-          @rect.x = x * TILE_SIZE; @rect.y = y * TILE_SIZE
-          color = determine_color(x, y)
-          @full_map.fill_rect(@rect, color)
-          do_procs #Apply partly pasable tiles.
-        end
-      end
-      @refresh_flag = false
+      if @full_map; @full_map.dispose end
+      id = map.map_id
+      Pass_Mapper::start(id) unless GGZ_Mini_Cache::table_available?(id)
+      draw_map
+    end
+    
+    def draw_map(ini_x = 0, ini_y = 0, fin_x = map.width, fin_y = map.height)   
+      id = map.map_id; vt = player.vehicle_type
+      @full_map.dispose unless @full_map.disposed? if @full_map
+      @full_map = Mapper::draw_map(ini_x, ini_y, fin_x, fin_y, id, vt)
     end  
     
-    def redraw_area(x1 = 0, y1 = 0, x2 = width, y2 = height)
+    def redraw_area(x1 = 0, y1 = 0, x2 = map.width - 1, y2 = map.height - 1)
       return unless map
       return unless map.valid?(x1, y1) && map.valid?(x2, y2)
       return unless x1 <= x2 && y1 <= y2
-      draw_map(x1, y1, x2, y2)
+      id = map.map_id; vh = player.vehicle_type
+      x2 += 1 unless x2 == map.width; y2 += 1 unless y2 == map.height
+      Pass_Mapper::make_pass_map(x1, y1, x2, y2)
+      @full_map = Mapper::draw_map(x1, y1, x2, y2, id, vh, @full_map)
     end
     
     def draw_map_objects
@@ -587,104 +632,6 @@ Entry bellow comes with my initial version:
       @redo_events_flag = true
     end
     
-    def do_procs #Used to apply partly pasable tiles.
-      return unless @procs
-      @procs.each do |proc|
-        proc.call
-      end
-      @procs = nil
-    end
-    
-# Color calculating methods =============================================    
-    def determine_color(x, y)
-      color = nil
-      PRIORITY_TILES.each do |object|
-        color = determine_color_with_priority(x, y, object)
-        break if color
-      end
-      color = set_passage_color(x, y) unless color
-      color
-    end
-  
-    def determine_color_with_priority(x, y, object)
-      return case object
-        when :region
-          REGIONS[map.region_id(x, y)] if REGIONS[map.region_id(x, y)]
-        when :terrain_tag
-          TERRAIN_TAGS[map.terrain_tag(x, y)] if TERRAIN_TAGS[map.terrain_tag(x, y)]
-        when :damage_floor
-          damage_floor_color if map.damage_floor?(x, y)
-      end   
-    end  
-    
-    def set_passage_color(x, y)
-      vehicle = player.vehicle
-      if vehicle 
-        if vehicle.type == :boat || vehicle.type == :ship
-          return water_passage(x, y)
-        end
-        if vehicle.type == :airship
-          return airship_landing(x, y)
-        end  
-      end  
-      walking_passage(x, y) 
-    end  
-    
-    def set_unpasable_2(x, y)
-      height = (TILE_SIZE/3).ceil
-      rect = Rect.new(x * TILE_SIZE, (y + 1)* TILE_SIZE - height, TILE_SIZE, height)
-      @full_map.fill_rect(rect, unpasable_color)
-    end
-
-    def set_unpasable_4(x, y)
-      width = (TILE_SIZE/3).ceil
-      rect = Rect.new((x + 1) * TILE_SIZE - width, y * TILE_SIZE, width , TILE_SIZE)
-      @full_map.fill_rect(rect, unpasable_color)
-    end 
-  
-    def set_unpasable_6(x, y)
-      width = (TILE_SIZE/3).ceil
-      rect = Rect.new(x * TILE_SIZE, y * TILE_SIZE, width , TILE_SIZE)
-      @full_map.fill_rect(rect, unpasable_color)
-    end 
-  
-    def set_unpasable_8(x, y)
-      height = (TILE_SIZE/3).ceil
-      rect = Rect.new(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, height)
-      @full_map.fill_rect(rect, unpasable_color)
-    end
-    
-# Color calculating methods: Passage Calcultors =========================
-    def water_passage(x, y)
-      player.map_passable?(x, y, 2) ? passable_color  : unpasable_color
-      #Player have boat or ship vehicle, and water have no directional
-      #passage, which is why is enough to check once.
-      #If player really uses vehicle, direction will be omited.
-    end  
-    
-    def airship_landing(x, y)
-      map.airship_land_ok?(x, y) ? passable_color  : unpasable_color
-    end
-    
-    def walking_passage(x, y)
-      pass = false; @procs = Array.new
-      for dir in (2..8).step(2) do
-        if player.map_passable?(x, y, dir)
-          pass = true
-        else
-          @procs << Proc.new do set_unpasable_2(x, y) end if dir == 2
-          @procs << Proc.new do set_unpasable_4(x, y) end if dir == 6
-          @procs << Proc.new do set_unpasable_6(x, y) end if dir == 4
-          @procs << Proc.new do set_unpasable_8(x, y) end if dir == 8
-        end
-      end
-      unless pass
-        @procs = nil #No passage, procs for partly passable tiles are not needed.
-        return unpasable_color
-      end
-      passable_color 
-    end  
-    
 # Get Event Color (called only externally) ================================  
     def get_event_color(event)#the comment tag reader
       return unless event.is_a?(Game_Event)
@@ -698,31 +645,31 @@ Entry bellow comes with my initial version:
           return COLORS[$1.to_i] if event.list[i].parameters[0]=~/<minimap color (\d+)>/
         end
       end
-      return nil
+      nil
     end
     
 # Abjust Minimap (called only externally) =================================
-    def abjust_minimap(viewport)
+    def adjust_minimap(viewport)
       #Abjust the viewport of the minimap holder.
       w = width; h = height
       x = player.x - w/2; y = player.y - h/2
-      x = abjust_x(x) unless map.loop_horizontal?
-      y = abjust_y(y) unless map.loop_vertical?
+      x = adjust_x(x) unless map.loop_horizontal?
+      y = adjust_y(y) unless map.loop_vertical?
       viewport.ox = x * TILE_SIZE; viewport.oy = y * TILE_SIZE
     end  
 
 # Method with uncategorized functionality ==================================
-    def abjust_x(x)
+    def adjust_x(x)
       x += 1 until map.valid?(x, 0)
       x -= 1 until map.valid?(x + (width - 1), 0)
       x
     end
     
-    def abjust_y(y)
+    def adjust_y(y)
       y += 1 until map.valid?(0, y) 
       y -= 1 until map.valid?(0, y + (height - 1))
       y
-    end 
+    end
     
     def map_list_add(*args)
       was_forbiden = map_forbiden?
@@ -771,36 +718,51 @@ Entry bellow comes with my initial version:
 
     def toggle_visibility
       return unless @timer == 0
+      return if @map_forbiden
       sec_button = ENABLE_DISABLE_BUTTON2 
       return unless Input.press?(sec_button) unless sec_button.nil?
       if BUTTON_CONTROL_SWITCH > 0
         return unless $game_switches[BUTTON_CONTROL_SWITCH]
       end  
-      self.enabled = !self.enabled
+      self.enabled = !self.enabled 
       @timer = Graphics.frame_rate * BUTTON_SENSIBILITY
     end  
     
-    def clear_update_data(new_map = false)
-      if new_map
-        @events.each_value do |e| e.dispose end
-        @full_map.dispose
-        @vehicles_bitmap.dispose
-        @events.clear
-        @vehicles.clear     
-      end  
+    def clear_update_data
       @redo_events_flag = false
       @redo_vehicles_flag = false
       @events_rfr.clear if @events_rfr
       @vehicles_rfr.clear if @vehicles_rfr
       @player_refresh = false
     end 
+    
+    #Used only for script call
+    def clear_cache(*args)
+      cache = GGZ_Mini_Cache
+      for i in args do
+        cache::delete_tables(i)
+      end
+      cache::clear_all_tables if args.empty?
+    end  
+    
+    def clear_current_map_cache
+      cache = GGZ_Mini_Cache
+      cache::delete_tables(map.map_id) unless CACHE_MAPS.include?(map.map_id)
+    end  
  
-# Disposing In Module graphical objects(done on player transfer) =======    
+# Disposing In-Module graphical objects(done on player transfer) =======    
     def on_player_transfer
       @initialized = false
-      clear_update_data(true)
-      @full_map.dispose
+      @events.each_value do |e| e.dispose end
+      if @full_map; @full_map.dispose end
+      @full_map = nil
+      @vehicles_bitmap.dispose
+      @events.clear
+      @vehicles.clear     
+      clear_update_data
+      clear_current_map_cache
     end
+    
 # DataManager Assistance ===============================================   
    def make_save_contents(contents)
      contents[:ggz_minimap_enabled1353]      = @enabled
@@ -819,13 +781,13 @@ Entry bellow comes with my initial version:
     return on_new_game if  e.nil? || ml.nil? || u.nil? || mf.nil?
     self.enabled = e; @maps_list = ml
     @update_when_disabled = u; @maps_list_forbid = mf
-    
+    on_game_start
   end
     
 # Update: called every frame ===========================================  
     def update
       @timer -= 1 if @timer > 0 if @timer
-      draw_map if @refresh_flag
+      create_map if @refresh_flag
     end  
     
   end #class self  
@@ -867,7 +829,7 @@ Entry bellow comes with my initial version:
       @minimap.bitmap = Minimap::full_map
       @minimap.opacity = OPACITY
       @minimap.visible = Minimap::enabled
-      abjust_minimap
+      adjust_minimap
     end  
     
     def create_player_sprite(z)
@@ -927,9 +889,10 @@ Entry bellow comes with my initial version:
     
     def move_player
       return unless Minimap::refresh_player
+      return unless @player.x / TILE_SIZE != $game_player.x || @player.y / TILE_SIZE != $game_player.y
       @player.x = $game_player.x * TILE_SIZE
       @player.y = $game_player.y * TILE_SIZE
-      abjust_minimap
+      adjust_minimap
     end 
     
     def update_events
@@ -959,31 +922,31 @@ Entry bellow comes with my initial version:
       @viewport.z = self.z + 1
     end
     
-    def abjust_minimap
-      return unless self.visible
-      Minimap::abjust_minimap(@viewport)
-      @player_x = $game_player.x
-      @player_y = $game_player.y
+    def adjust_minimap
+      return if !Minimap::enabled || Minimap::map_forbiden?
+      Minimap::adjust_minimap(@viewport)
     end  
     
     def change_visiblity(map_alowed = true)
-     self.visible  = Minimap::enabled && map_alowed
-     @viewport.visible = Minimap::enabled && map_alowed
-     @minimap.visible = Minimap::enabled && map_alowed
-     #After load save file, minimap plane doesn't display
-     #even if visible == true, unless is set to true
-     #again. So far, having no idea why. Is on same viewport.
-    end  
+      self.visible  = Minimap::enabled && map_alowed
+      @viewport.visible = Minimap::enabled && map_alowed
+      @minimap.visible = Minimap::enabled && map_alowed
+      #After load save file, minimap plane doesn't display
+      #even if visible == true, unless is set to true
+      #again. So far, having no idea why. Is on same viewport.
+    end      
     
     def update #Called every frame
       if Minimap::map_forbiden?
         change_visiblity(false) if self.visible || @viewport.visible
       else
+        @minimap.bitmap = Minimap::full_map if @minimap.bitmap != Minimap::full_map
         unless @viewport.visible == Minimap::enabled && @viewport.visible == self.visible
           change_visiblity
         end  
         update_objects if Minimap::enabled
-      end   
+      end
+     @minimap.bitmap == Minimap::full_map if @minimap.bitmap != Minimap::full_map
     end  
     
     def dispose
@@ -1006,6 +969,233 @@ Entry bellow comes with my initial version:
     end 
     
   end #class Window_Minimap 
+# ========================================================================
+#                   module GGZ_Mini_Cache
+# ========================================================================
+# Used to store, delete, fetch and check Table objects, and check
+# if certain map and vehicle keys have Table entry.
+# That data is used so minimaps to be drawn faster, as long Table data is 
+# available.
+# ========================================================================
+  module GGZ_Mini_Cache
+    
+    class << self
+    
+      def add_table(map_id, table) 
+        @tables ||= Hash.new
+        @tables[map_id] = table
+      end
+      
+      def delete_tables(map_id)
+        return unless @tables
+        return unless @tables[map_id]
+        @tables.clear
+      end
+    
+      def fetch_table(map_id)
+        return unless @tables
+        return @tables[map_id] if @tables[map_id]
+      end  
+      
+      def table_available?(map_id)
+        return false unless @tables
+        @tables[map_id].nil? ? false : true
+      end
+      
+      def clear_all_tables
+        return unless @tables
+        @tables.clear
+      end  
+      
+    end
+    
+  end  #module GGZ_Mini_Cache
+
+# =======================================================================
+#                   module Pass Mapper
+# =======================================================================
+# Used to create passability data, although it also includes terrain tag, 
+# region and damage floors coloring. Makes Table object @pass_map, that 
+# will be stored in GGZ_Mini_Cache. Unlike the flags, this contains final
+# passability data for every x and y, plus special colors data used for 
+# regions, terrain tags and damage floor.
+# =======================================================================
+  module Pass_Mapper
+    
+    class << self
+    
+      def start(map_id)
+        make_pass_map(0, 0, map.width, map.height)
+      end  
+      
+      def make_pass_map(ini_x, ini_y, fin_x, fin_y)
+        map_id = map.map_id
+        @pass_map = cache::table_available?(map_id) ? 
+                    cache::fetch_table(map_id) :
+                    Table.new(map.width, map.height, 2)
+    
+        apply_passability(ini_x, ini_y, fin_x, fin_y)
+        add_to_cache(map_id)
+      end  
+      
+      def apply_passability(ini_x, ini_y, fin_x, fin_y)
+        for x in ini_x...fin_x
+          for y in ini_y...fin_y
+            apply_color(x, y)
+          end
+        end
+      end  
+      
+      def add_to_cache(map_id)
+        cache::add_table(map_id, @pass_map)
+      end  
+    
+      def apply_color(x, y)
+        color_bit = nil
+        PRIORITY_TILES.each do |object|
+          break if apply_tiles_color(x, y, object)
+        end
+        if  @pass_map[x, y, 1] == 0
+          @pass_map[x, y, 0] = set_passage_color(x, y)          
+        end  
+      end
+      
+      def apply_tiles_color(x, y, object)
+        color_id = case object
+          when :region
+            REGIONS[map.region_id(x, y)] if REGIONS[map.region_id(x, y)]
+          when :terrain_tag
+            TERRAIN_TAGS[map.terrain_tag(x, y)] if TERRAIN_TAGS[map.terrain_tag(x, y)]
+          when :damage_floor
+            6 if map.damage_floor?(x, y)
+        end 
+        return false if color_id.nil?
+        @pass_map[x, y, 1] = color_id
+        true
+      end
+      
+      def set_passage_color(x, y)
+        pass = 0; vpass = 0x0600
+        map.all_tiles(x, y).each do |tile_id|
+          flag = map.tileset.flags[tile_id]
+          next if (flag & 0x010) != 0
+          vpass &= flag; pass |= flag & 0x0f
+          vpass |= 0x0800 if pass == 0 && (flag & 0x0800 == 0)
+          return (vpass >> 5) | pass
+        end
+      end  
+      
+      def cache; GGZ_Mini_Cache end
+      def map; $game_map        end
+      def player; $game_player  end
+        
+    end #class self 
+    
+  end #Pass_Mapper
+  
+# ==========================================================================
+#                        Module Mapper
+# ==========================================================================
+# Used to do the actual minimap drawing. It interprets the passability table
+# objects, created by my other module and produces a bitmap.
+# ==========================================================================
+ module Mapper
+    
+    class << self
+      
+      def on_game_start
+        create_bitmaps
+        create_party_passable_bitmaps
+      end  
+      
+      def draw_map(ini_x, ini_y, fin_x, fin_y, map_id, vehicle_type, btm = nil)
+        full_map = btm.nil? ? Bitmap.new(map.width * TILE_SIZE, map.height * TILE_SIZE) :
+                               btm
+        table = GGZ_Mini_Cache.fetch_table(map_id)
+        return unless table
+        for x in ini_x...fin_x
+          for y in ini_y...fin_y
+            if table[x, y, 1] == 0
+              bitmap_id = interpret_passage(x, y, table[x, y, 0], vehicle_type)
+              bitmap = @bitmaps_pp[bitmap_id]
+            else
+              bitmap = @bitmaps[table[x, y, 1]]
+            end  
+            full_map.blt(x * TILE_SIZE, y * TILE_SIZE, bitmap, bitmap.rect)
+          end
+        end
+        return full_map
+      end  
+      
+      def interpret_passage(x, y, bit, vehicle_type)
+        return water_passable(x, y, bit, 0x010) if vehicle_type == :boat
+        return water_passable(x, y, bit, 0x020) if vehicle_type == :ship
+        return air_land(x, y, bit, 0x040) if vehicle_type == :airship
+        return bit & 0x0f
+      end
+      
+      def water_passable(x, y, bit, bit_2)
+        (bit & bit_2) != bit_2 ? 0 : 0x0f
+      end  
+      
+      def air_land(x, y, bit, bit_2)
+        (bit & bit_2) == bit_2 ? 0 : 0x0f
+      end  
+      
+      def create_bitmaps
+        @bitmaps = Hash.new
+        COLORS.each do |k , c|
+          b = Bitmap.new(TILE_SIZE, TILE_SIZE)
+          b.fill_rect(b.rect, c)
+          @bitmaps[k] = b
+        end
+      end 
+    
+      def create_party_passable_bitmaps
+        @bitmaps_pp = Hash.new
+        @bitmaps_pp[0] = @bitmaps[1]
+        @bitmaps_pp[15] = @bitmaps[2]
+        for i in 1..14
+          b = Bitmap.new(TILE_SIZE, TILE_SIZE)
+          b.fill_rect(b.rect, COLORS[1])        
+          set_unpasable_2(b) if i & 0x01 != 0
+          set_unpasable_4(b) if i & 0x04 != 0
+          set_unpasable_6(b) if i & 0x02 != 0
+          set_unpasable_8(b) if i & 0x08 != 0
+          @bitmaps_pp[i] = b
+        end  
+      end  
+      
+      def set_unpasable_2(bitmap)
+        height = (TILE_SIZE/3).ceil
+        rect = Rect.new(0, TILE_SIZE - height, TILE_SIZE, height)
+        bitmap.fill_rect(rect, COLORS[2])
+      end
+
+      def set_unpasable_4(bitmap)
+        width = (TILE_SIZE/3).ceil
+        rect = Rect.new(TILE_SIZE - width, 0, width , TILE_SIZE)
+        bitmap.fill_rect(rect, COLORS[2])
+      end 
+  
+      def set_unpasable_6(bitmap)
+        width = (TILE_SIZE/3).ceil
+        rect = Rect.new(0, 0, width , TILE_SIZE)
+        bitmap.fill_rect(rect, COLORS[2])
+      end 
+  
+      def set_unpasable_8(bitmap)
+        height = (TILE_SIZE/3).ceil
+        rect = Rect.new(0, 0, TILE_SIZE, height)
+        bitmap.fill_rect(rect, COLORS[2])
+      end
+      
+      def map;                $game_map    end
+      def player;             $game_player end 
+        
+    end #class self
+
+  end #module Mapper
   
 end  #module Minimap
 # =======================================================================
@@ -1054,6 +1244,7 @@ class Scene_Map < Scene_Base
 end
 # ========================================================================
 #                  class Game Player
+# ========================================================================
 # Adjusting it so my minimap reacts when player get on or off of vehicle.
 # Making new attribute reader as well.
 # ========================================================================
@@ -1062,7 +1253,7 @@ class Game_Player < Game_Character
   alias_method :ggzupdate_vehicle_get_on_old1353,  :update_vehicle_get_on
   alias_method :ggzupdate_vehicle_get_off_old1353, :update_vehicle_get_off
   
-  attr_reader :new_map_id
+  attr_reader :new_map_id, :vehicle_type
   
   def update_vehicle_get_on(*args)
     if !@followers.gathering? && !moving?
@@ -1081,6 +1272,7 @@ class Game_Player < Game_Character
 end 
 # =========================================================================
 #                  class Game CharacterBase
+# ========================================================================
 # Adjusting it so my minimap reacts on characters movements, and set 
 # positions. Adding one new method.
 # =========================================================================
@@ -1125,13 +1317,14 @@ class Game_CharacterBase
 end
 # ========================================================================
 #                        class Game Character
+# ========================================================================
 # Adjusting it so minimap reacts on characters jump.
 # ========================================================================
 class Game_Character < Game_CharacterBase
   
   alias_method :ggzjumpold1353, :jump
   
-    def jump(*args)
+  def jump(*args)
     x1 = @x; y1 = @y
     ggzjumpold1353(*args)
     x2 = @x; y2 = @y
@@ -1141,6 +1334,7 @@ class Game_Character < Game_CharacterBase
 end  
 # ========================================================================
 #                         class Game Vehicle
+# ========================================================================
 # Adds a attribute reader for @type and @map_id  property.
 # Check if vehicle is set to new location. Support to synch with player
 # in minimap too. Adds a method to get the vehicle id from the map vehicles
@@ -1184,6 +1378,7 @@ class Game_Vehicle < Game_Character
 end  
 # ========================================================================
 #                        class Game Event
+# ========================================================================
 # Adjusting it so it upon refresh will set its id and color, if event
 # is to be drawn on minimap.
 # ========================================================================
@@ -1201,6 +1396,7 @@ class Game_Event < Game_Character
 end
 # ========================================================================
 #                       class Data Manager
+# ========================================================================
 # Adjusting it so it work with my save data, and do my objects 
 # initialisation on new game.
 # ========================================================================
@@ -1230,6 +1426,7 @@ module DataManager
 end
 # =========================================================================
 #                          class Game Map
+# ========================================================================
 # Adjusting it so it clears the objects track data from the
 # previous scene iteration.
 # =========================================================================
@@ -1243,7 +1440,7 @@ class Game_Map
     ggzupdateold1353(*args)
   end  
   
-end  
+end
 # =========================================================================
 #                              END OF FILE
 # =========================================================================
