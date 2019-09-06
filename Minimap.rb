@@ -439,7 +439,7 @@ Entry bellow comes with my initial version:
   Redraws entire map.
   In earlier versions i provided Minimap::draw_map, but that will not work
   anymore. That so because while it will draw map again, it will use the old
-  passability data. So, use Minimap::redraw_map instead, if other script 
+  passability data. So, use Minimap::redraw_area instead, if other script 
   changed terrain, regions, terrain tag or damage floors.
   
   While redrawing whole map does the best job, is somewhat costly process.
