@@ -1128,10 +1128,12 @@ Entry bellow comes with my initial version:
       end  
       
       def interpret_passage(x, y, bit, vehicle_type)
-        return water_passable(x, y, bit, 0x010) if vehicle_type == :boat
-        return water_passable(x, y, bit, 0x020) if vehicle_type == :ship
-        return air_land(x, y, bit, 0x040) if vehicle_type == :airship
-        return bit & 0x0f
+        return case vehicle_type
+          when :boat;    water_passable(x, y, bit, 0x010)
+          when :ship;    water_passable(x, y, bit, 0x020)
+          when :airship; air_land(x, y, bit, 0x040) 
+          else;          bit & 0x0f
+        end
       end
       
       def water_passable(x, y, bit, bit_2)
