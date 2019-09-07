@@ -989,7 +989,7 @@ Entry bellow comes with my initial version:
       def delete_tables(map_id)
         return unless @tables
         return unless @tables[map_id]
-        @tables.clear
+        @tables[map_id] = nil
       end
     
       def fetch_table(map_id)
