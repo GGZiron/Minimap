@@ -322,7 +322,7 @@ Entry bellow comes with my initial version:
   #A value to become a text, it needs to be between ' ' or between " "
   #Also, knowing the dimention of your screen and minimap, you can set
   #literal values instead formulas. Y uses literal value. 
-  Z = 101 #The z coordinate of the window, that will contain the minimap.
+  Z = 60 #The z coordinate of the window, that will contain the minimap.
   #The minimap viewport will be with one higher.
 
   OPACITY = 180 #The minimap's opacity. Valid range: 0 - 255.
