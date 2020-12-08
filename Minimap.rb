@@ -82,7 +82,7 @@ Entry bellow comes with my initial version:
      for map revisit or for vehicle change). More about caches in settings. 
     *Fixed some script calls.
     *Fixed some bugs.
-   Version 1.2.1 Released on 08/12/2021
+   Version 1.2.1 Released on 08/12/2020
     *Upon pressing f12(and maybe under other circumstances too), my minimap
      window would would stay blank. Connected with not initializing everything
      upon starting new game. Now that should be fixed.
