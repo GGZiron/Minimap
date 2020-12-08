@@ -1,4 +1,4 @@
-($imported ||= {})[:GGZiron_Minimap] = '1.2.0'
+($imported ||= {})[:GGZiron_Minimap] = '1.2.1'
 
 module Minimap
 
@@ -15,7 +15,7 @@ module Minimap
   Allowed to edit, and allowed to post your edit, but together with link to this
   script tread in RPG Maker forums. Not the case if the very post is within
   the tread of this script in RPG Maker forums, then link not needed.
-  Version: 1.2.0
+  Version: 1.2.1
   
   Script Purpose: Adds Minimap on the Scene Map, to be used for navigation.
   Compitability: Check it yourself, for your project :).
@@ -82,6 +82,10 @@ Entry bellow comes with my initial version:
      for map revisit or for vehicle change). More about caches in settings. 
     *Fixed some script calls.
     *Fixed some bugs.
+   Version 1.2.1 Released on 08/12/2021
+    *Upon pressing f12(and maybe under other circumstances too), my minimap
+     window would would stay blank. Connected with not initializing everything
+     upon starting new game. Now that should be fixed.
     
     
   Please, do report me bugs, if you see some. Especially the deal breakers.
@@ -318,7 +322,7 @@ Entry bellow comes with my initial version:
   #A value to become a text, it needs to be between ' ' or between " "
   #Also, knowing the dimention of your screen and minimap, you can set
   #literal values instead formulas. Y uses literal value. 
-  Z = 3 #The z coordinate of the window, that will contain the minimap.
+  Z = 101 #The z coordinate of the window, that will contain the minimap.
   #The minimap viewport will be with one higher.
 
   OPACITY = 180 #The minimap's opacity. Valid range: 0 - 255.
@@ -500,7 +504,8 @@ Entry bellow comes with my initial version:
       @maps_list_forbid     = MAPS_LIST_FORBID
       @update_when_disabled = UPDATE_WHEN_DISSABLED
       on_game_start
-    end  
+      @initialized = false;
+    end 
    
     def on_game_start
       @cache_maps = CACHE_MAPS
@@ -1243,6 +1248,13 @@ class Scene_Map < Scene_Base
     ggz_post_transfer_old1353(*args)
   end
   
+  def terminate
+    super
+    SceneManager.snapshot_for_background
+    dispose_spriteset
+    perform_battle_transition if SceneManager.scene_is?(Scene_Battle)
+  end  
+  
 end
 # ========================================================================
 #                  class Game Player
@@ -1428,7 +1440,7 @@ module DataManager
 end
 # =========================================================================
 #                          class Game Map
-# ========================================================================
+# =========================================================================
 # Adjusting it so it clears the objects track data from the
 # previous scene iteration.
 # =========================================================================
