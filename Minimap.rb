@@ -509,7 +509,7 @@ Entry bellow comes with my initial version:
       on_game_start
       @initialized = false;
     end 
-   
+    
     def on_game_start
       @cache_maps = CACHE_MAPS
       Mapper::on_game_start
@@ -785,7 +785,7 @@ Entry bellow comes with my initial version:
     ml = contents[:ggz_minimap_maps_list1353]
     u  = contents[:ggz_update_when_disabled1353]
     mf  = contents[:ggz_maps_list_forbid1353]
-    
+    @initialized = false;
     return on_new_game if  e.nil? || ml.nil? || u.nil? || mf.nil?
     self.enabled = e; @maps_list = ml
     @update_when_disabled = u; @maps_list_forbid = mf
@@ -1438,7 +1438,6 @@ module DataManager
   def self.extract_save_contents(*args)
     ggzextract_save_contentsold1353(*args)
     Minimap::extract_save_contents(args[0])
-    Minimap::on_new_game
   end
   
 end
