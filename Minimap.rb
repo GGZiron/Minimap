@@ -1435,6 +1435,7 @@ module DataManager
   def self.extract_save_contents(*args)
     ggzextract_save_contentsold1353(*args)
     Minimap::extract_save_contents(args[0])
+    Minimap::on_new_game
   end
   
 end
