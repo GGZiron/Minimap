@@ -1,4 +1,4 @@
-($imported ||= {})[:GGZiron_Minimap] = '1.2.1'
+($imported ||= {})[:GGZiron_Minimap] = '1.2.2'
 
 module Minimap
 
@@ -86,6 +86,9 @@ Entry bellow comes with my initial version:
     *Upon pressing f12(and maybe under other circumstances too), my minimap
      window would would stay blank. Connected with not initializing everything
      upon starting new game. Now that should be fixed.
+   Version 1.2.2 Released on 08/12/2020
+    *And again, forgot to fix same issue if player continue from save file
+     instead to start new game..Now should be really fixed.
     
     
   Please, do report me bugs, if you see some. Especially the deal breakers.
