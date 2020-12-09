@@ -86,7 +86,7 @@ Entry bellow comes with my initial version:
     *Upon pressing f12(and maybe under other circumstances too), my minimap
      window would would stay blank. Connected with not initializing everything
      upon starting new game. Now that should be fixed.
-   Version 1.2.2 Released on 08/12/2020
+   Version 1.2.2 Released on 09/12/2020
     *And again, forgot to fix same issue if player continue from save file
      instead to start new game..Now should be really fixed.
     
