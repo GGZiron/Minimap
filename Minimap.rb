@@ -1,4 +1,4 @@
-($imported ||= {})[:GGZiron_Minimap] = '1.2.2'
+($imported ||= {})[:GGZiron_Minimap] = '1.2.3'
 
 module Minimap
 
@@ -15,7 +15,7 @@ module Minimap
   Allowed to edit, and allowed to post your edit, but together with link to this
   script tread in RPG Maker forums. Not the case if the very post is within
   the tread of this script in RPG Maker forums, then link not needed.
-  Version: 1.2.2
+  Version: 1.2.3
   
   Script Purpose: Adds Minimap on the Scene Map, to be used for navigation.
   Compitability: Check it yourself, for your project :).
@@ -1091,6 +1091,7 @@ Entry bellow comes with my initial version:
           vpass |= 0x0800 if pass == 0 && (flag & 0x0800 == 0)
           return (vpass >> 5) | pass
         end
+        return 15
       end  
       
       def cache; GGZ_Mini_Cache end
